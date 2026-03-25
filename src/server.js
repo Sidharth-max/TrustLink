@@ -38,6 +38,7 @@ app.use((req, res, next) => {
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ── Sessions ───────────────────────────────────────────────────────────────
+app.set('trust proxy', 1); // Trust first proxy (e.g. for Render/Railway/AWS)
 app.use(session({
   store: new pgSession({
     pool,
@@ -50,7 +51,8 @@ app.use(session({
   cookie: {
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    // Disable secure in production if we are not on HTTPS (useful for raw IP access)
+    secure: process.env.COOKIE_SECURE === 'true',
     sameSite: 'lax',
   },
 }));
