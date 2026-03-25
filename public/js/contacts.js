@@ -93,11 +93,34 @@ const ContactsPage = (() => {
     } catch (err) { toast(err.message, 'error'); }
   }
 
+
+  function downloadExampleCSV() {
+    const csvContent = "name,phone,tags\n"
+      + "John Doe,919876543210,\"vip,lead\"\n"
+      + "Jane Smith,15559876543,\"customer\"";
+      
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "contacts_template.csv");
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 100);
+  }
+
   function init() {
     document.getElementById('add-contact-btn').onclick = openAdd;
     document.getElementById('import-csv-btn').onclick = () => toast('CSV import coming soon in this UI variant', 'info');
+    
+    const exampleBtn = document.getElementById('example-csv-btn');
+    if (exampleBtn) exampleBtn.onclick = downloadExampleCSV;
+
     load();
   }
-
-  return { init, load, openAdd, delete: deleteContact };
+  
+  return { init, load, openAdd, delete: deleteContact, downloadExampleCSV };
 })();

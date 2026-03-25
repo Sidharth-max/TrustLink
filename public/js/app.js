@@ -74,10 +74,13 @@
     }
   });
 
-  document.getElementById('logout-btn').addEventListener('click', async () => {
-    await API.logout().catch(() => {});
+  function handleLogout() {
+    API.logout().catch(() => {});
     showLogin();
-  });
+  }
+
+  document.getElementById('logout-btn')?.addEventListener('click', handleLogout);
+  document.getElementById('mobile-logout-btn')?.addEventListener('click', handleLogout);
 
   // ── Navigation ────────────────────────────────────────────────────
   function navigateTo(page) {

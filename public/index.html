@@ -41,6 +41,11 @@
     <svg id="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
   </button>
 
+  <!-- Mobile Logout Button (Visible < 768px via CSS) -->
+  <button class="btn btn-icon logout-toggle" id="mobile-logout-btn" title="Logout">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+  </button>
+
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="logo-box">
@@ -87,7 +92,6 @@
           <div id="sidebar-name" style="font-weight:600; font-size:13px;">Admin</div>
           <div id="sidebar-role" style="font-size:11px; color:var(--text-muted)">admin</div>
         </div>
-        <button class="btn btn-icon" id="logout-btn" style="width:28px; height:28px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>
       </div>
     </div>
   </aside>
@@ -228,6 +232,7 @@
           <p id="contact-count-label">Manage your audience</p>
         </div>
         <div style="display:flex; gap:12px;">
+          <button class="btn btn-secondary" id="example-csv-btn" title="Download sample CSV" onclick="ContactsPage.downloadExampleCSV()">Example CSV</button>
           <button class="btn btn-secondary" id="import-csv-btn">Import CSV</button>
           <button class="btn btn-primary" id="add-contact-btn">Add Contact</button>
         </div>
