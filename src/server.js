@@ -28,7 +28,7 @@ const PORT = process.env.PORT || 3001;
 // ── Parse JSON bodies ──────────────────────────────────────────────────────
 // Webhook route needs raw body for HMAC verification, so we exclude it here
 app.use((req, res, next) => {
-  if (req.path === '/webhook') {
+  if (req.path === '/trust-webhook') {
     // Keep raw body available for signature verification
     express.raw({ type: 'application/json' })(req, res, next);
   } else {
@@ -61,7 +61,7 @@ app.use(session({
 app.use(express.static(path.join(__dirname, '../public')));
 
 // ── API Routes ─────────────────────────────────────────────────────────────
-app.use('/webhook', webhookRouter);                  // public — Meta handshake
+app.use('/trust-webhook', webhookRouter);            // public — Meta handshake
 app.use('/api/agents', agentsRouter);                // login is public; others require auth
 app.use('/api/contacts', requireAuth, contactsRouter);
 app.use('/api/messages', requireAuth, messagesRouter);
