@@ -116,4 +116,7 @@
 
   // ── Boot ──────────────────────────────────────────────────────────
   checkAuth();
+
+  // Expose public API
+  window.app = { showPage: navigateTo };
 })();

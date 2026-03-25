@@ -245,6 +245,8 @@ a { color: var(--accent); text-decoration: none; }
 .btn:active { transform: scale(.97); }
 .btn-primary   { background: var(--accent); color: #fff; }
 .btn-primary:hover { background: var(--accent-hover); }
+.btn-blue { background: var(--blue); color: #fff; }
+.btn-blue:hover { background: #16609b; }
 .btn-secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
 .btn-secondary:hover { background: var(--border); }
 .btn-danger    { background: var(--red); color: #fff; }

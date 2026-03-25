@@ -52,7 +52,7 @@ router.post('/', async (req, res, next) => {
   try {
     const {
       name, template_name, language_code = 'en_US',
-      segment_tag = '', scheduled_at = null,
+      segment_tag = '', recipients = '', scheduled_at = null,
     } = req.body;
 
     if (!name || !template_name) {
@@ -69,11 +69,13 @@ router.post('/', async (req, res, next) => {
     }
 
     const result = await query(
-      `INSERT INTO broadcasts (name, template_name, language_code, segment_tag, scheduled_at, status)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO broadcasts (name, template_name, language_code, segment_tag, recipients, scheduled_at, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
       [
-        name.trim(), template_name.trim(), language_code, segment_tag.trim(),
+        name.trim(), template_name.trim(), language_code, 
+        segment_tag ? segment_tag.trim() : '', 
+        recipients ? recipients.trim() : '',
         schedDate ? schedDate.toISOString() : null,
         schedDate ? 'scheduled' : 'draft',
       ]
@@ -112,8 +114,13 @@ router.post('/:id/send', async (req, res, next) => {
     let contactsQuery = `SELECT id, phone FROM contacts WHERE opted_in = true`;
     const params = [];
 
-    if (broadcast.segment_tag && broadcast.segment_tag.trim() !== '') {
-      // Match contacts that have this tag
+    if (broadcast.recipients && broadcast.recipients.trim() !== '') {
+      // Priority 1: Specific phone numbers
+      const phones = broadcast.recipients.split(',').map(p => p.trim()).filter(Boolean);
+      contactsQuery += ` AND phone = ANY($1)`;
+      params.push(phones);
+    } else if (broadcast.segment_tag && broadcast.segment_tag.trim() !== '') {
+      // Priority 2: Segment tag
       contactsQuery += ` AND (',' || tags || ',' ILIKE $1)`;
       params.push(`%,${broadcast.segment_tag.trim()},%`);
     }

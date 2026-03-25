@@ -44,6 +44,7 @@ const BroadcastsPage = (() => {
     const template = document.getElementById('b-template').value.trim();
     const lang     = document.getElementById('b-lang').value.trim() || 'en_US';
     const segment  = document.getElementById('b-segment').value.trim();
+    const recipients = document.getElementById('b-recipients').value.trim();
     const schedule = document.getElementById('b-schedule').value;
 
     if (!name || !template) { toast('Name and template are required', 'error'); return; }
@@ -52,6 +53,7 @@ const BroadcastsPage = (() => {
       await API.createBroadcast({
         name, template_name: template, language_code: lang,
         segment_tag: segment,
+        recipients,
         scheduled_at: schedule || null,
       });
       toast('Broadcast created');
@@ -85,6 +87,7 @@ const BroadcastsPage = (() => {
       document.getElementById('b-template').value = '';
       document.getElementById('b-lang').value     = 'en_US';
       document.getElementById('b-segment').value   = '';
+      document.getElementById('b-recipients').value = '';
       document.getElementById('b-schedule').value  = '';
       openModal('broadcast-modal');
     });

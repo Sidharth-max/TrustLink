@@ -36,7 +36,7 @@ const ContactsPage = (() => {
 
   async function load() {
     const tbody = document.getElementById('contacts-tbody');
-    tbody.innerHTML = `<tr><td colspan="6" class="loading-row"><div class="spinner"></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="loading-row"><div class="spinner"></div></td></tr>`;
 
     try {
       const filters = getFilters();
@@ -48,13 +48,14 @@ const ContactsPage = (() => {
       document.getElementById('contact-count-label').textContent = `${pagination.total} contacts`;
 
       if (contacts.length === 0) {
-        tbody.innerHTML = emptyRow(6, 'No contacts found');
+        tbody.innerHTML = emptyRow(7, 'No contacts found');
         document.getElementById('contacts-pagination').innerHTML = '';
         return;
       }
 
       tbody.innerHTML = contacts.map(c => `
-        <tr data-id="${c.id}">
+        <tr data-id="${c.id}" data-phone="${esc(c.phone)}">
+          <td><input type="checkbox" class="contact-select" value="${esc(c.phone)}" /></td>
           <td data-label="Name">${esc(c.name || '—')}</td>
           <td data-label="Phone"><code style="font-size:.8rem">${esc(c.phone)}</code></td>
           <td data-label="Tags">${c.tags ? c.tags.split(',').map(t => t.trim()).filter(Boolean).map(t => `<span class="badge badge-gray" style="margin:1px">${esc(t)}</span>`).join('') : '—'}</td>
@@ -70,8 +71,9 @@ const ContactsPage = (() => {
       `).join('');
 
       renderPagination(pagination);
+      updateSelectionUI();
     } catch (err) {
-      tbody.innerHTML = emptyRow(6, 'Failed to load contacts');
+      tbody.innerHTML = emptyRow(7, 'Failed to load contacts');
       console.error(err);
     }
   }
@@ -178,6 +180,28 @@ const ContactsPage = (() => {
     });
     document.getElementById('do-csv-import-btn').addEventListener('click', doImport);
 
+    // Selection logic
+    document.getElementById('contact-select-all').addEventListener('change', (e) => {
+      document.querySelectorAll('.contact-select').forEach(cb => cb.checked = e.target.checked);
+      updateSelectionUI();
+    });
+
+    document.getElementById('contacts-tbody').addEventListener('change', (e) => {
+      if (e.target.classList.contains('contact-select')) {
+        updateSelectionUI();
+      }
+    });
+
+    document.getElementById('broadcast-selected-btn').addEventListener('click', () => {
+      const selected = Array.from(document.querySelectorAll('.contact-select:checked')).map(cb => cb.value);
+      if (selected.length === 0) return;
+      
+      // Open broadcast page and pre-fill recipients
+      app.showPage('broadcasts');
+      document.getElementById('b-recipients').value = selected.join(', ');
+      openModal('broadcast-modal');
+    });
+
     // Search with debounce
     document.getElementById('contact-search').addEventListener('input', () => {
       clearTimeout(searchTimer);
@@ -188,6 +212,15 @@ const ContactsPage = (() => {
 
     loadTags();
     load();
+  }
+
+  function updateSelectionUI() {
+    const selected = document.querySelectorAll('.contact-select:checked');
+    const btn = document.getElementById('broadcast-selected-btn');
+    btn.style.display = selected.length > 0 ? 'flex' : 'none';
+    if (selected.length > 0) {
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg> Broadcast (${selected.length})`;
+    }
   }
 
   return { init, load, edit, remove, goPage };
