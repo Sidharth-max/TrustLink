@@ -4,7 +4,7 @@
  */
 
 (() => {
-  let currentPage = 'dashboard';
+  let currentPage = localStorage.getItem('lastPage') || 'dashboard';
   let currentUser = null;
 
   const pageModules = {
@@ -86,6 +86,7 @@
   function navigateTo(page) {
     if (!document.getElementById(`page-${page}`)) page = 'dashboard';
     currentPage = page;
+    localStorage.setItem('lastPage', page);
 
     // Turn off 'chat-active' mode globally when navigating elsewhere
     document.body.classList.remove('chat-active');

@@ -194,13 +194,8 @@
           </div>
         </div>
         <div class="chat-window" id="chat-window">
-           <div class="empty-state" id="chat-empty">
-              <!-- Illustrated Empty State -->
-              <div class="empty-graphic" style="color:var(--primary); opacity:0.8;">
-                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-              </div>
-              <h3>No chat selected</h3>
-              <p>Pick a conversation from the left to start messaging your customers in real-time.</p>
+           <div id="chat-empty">
+              <!-- Rendered via JS renderEmptyState -->
            </div>
            <div id="chat-view" style="display:none; flex-direction:column; height:100%;">
               <div class="chat-header" style="padding:16px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; background:var(--surface);">
