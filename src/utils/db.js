@@ -10,8 +10,10 @@ require('dotenv').config();
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  // Allow self-signed certs on Railway / Render free tier
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  // Allow disabling SSL via DB_SSL=false for local Docker production environments
+  ssl: (process.env.DB_SSL === 'true' || (process.env.NODE_ENV === 'production' && process.env.DB_SSL !== 'false'))
+    ? { rejectUnauthorized: false }
+    : false,
   max: 10,               // max pool connections
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,

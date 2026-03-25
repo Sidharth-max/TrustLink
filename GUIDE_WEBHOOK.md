@@ -7,7 +7,7 @@ To receive incoming Hindu/Diwali greetings, messages, and delivery reports, you 
 2. In the left sidebar, click **WhatsApp** → **Configuration**.
 3. Under **Webhook**, click **Edit**.
 4. Set the following:
-   - **Callback URL**: `https://your-domain.com/webhook`
+   - **Callback URL**: `https://trustlink.pjpt.prg/webhook`
    - **Verify Token**: (Matches your `VERIFY_TOKEN` in `.env`)
 5. Click **Verify and Save**. Meta will send a GET request to your server to confirm it's ready!
 
