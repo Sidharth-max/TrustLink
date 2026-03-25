@@ -10,7 +10,7 @@ By default, EC2 IPs change on every restart. You **must** assign an Elastic IP:
 
 ## 2. Domain Name & HTTPS (Mandatory)
 Meta **requires** an `https://` URL for Webhooks.
-1. Point your domain (**trustlink.pjpt.prg**) A-Record to your Elastic IP.
+1. Point your domain (**callback.pjpt.org**) A-Record to your Elastic IP.
 2. Install **Nginx** and **Certbot** on your server:
    ```bash
    sudo apt install nginx python3-certbot-nginx -y
@@ -19,7 +19,7 @@ Meta **requires** an `https://` URL for Webhooks.
    ```nginx
    server {
        listen 80;
-       server_name trustlink.pjpt.prg;
+       server_name callback.pjpt.org;
        location / {
            proxy_pass http://localhost:3001;
            proxy_set_header Host $host;
@@ -32,7 +32,7 @@ Meta **requires** an `https://` URL for Webhooks.
 4. Enable and Get SSL:
    ```bash
    sudo ln -s /etc/nginx/sites-available/whatsapp /etc/nginx/sites-enabled/
-   sudo certbot --nginx -d trustlink.pjpt.prg
+   sudo certbot --nginx -d callback.pjpt.org
    ```
 
 ## 3. Production Environment Variables
@@ -59,4 +59,4 @@ sudo systemctl enable docker
 ```
 
 ---
-**Final Step**: Once your `https://trustlink.pjpt.prg/webhook` is live, go to Meta and click **Verify and Save**!
+**Final Step**: Once your `https://callback.pjpt.org/webhook` is live, go to Meta and click **Verify and Save**!
