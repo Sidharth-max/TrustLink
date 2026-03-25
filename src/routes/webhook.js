@@ -80,7 +80,7 @@ router.get('/', (req, res) => {
 
   console.log('[WEBHOOK] GET — verification successful');
   // Must return the challenge value as plain text for Meta to confirm
-  res.status(200).send(challenge);
+  res.status(200).set('Content-Type', 'text/plain').send(challenge);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
