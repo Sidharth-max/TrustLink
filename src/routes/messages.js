@@ -69,7 +69,7 @@ router.get('/conversations', async (req, res, next) => {
     );
 
     const countRes = await query(
-      `SELECT COUNT(*) FROM conversations WHERE 1=1 ${whereStatus}`,
+      `SELECT COUNT(*) FROM conversations conv WHERE 1=1 ${whereStatus}`,
       []
     );
 
