@@ -41,14 +41,17 @@ const InboxPage = (() => {
                data-id="${c.id}" onclick="InboxPage.openConv(${c.id})">
             <div class="conv-avatar">${ini}</div>
             <div class="conv-meta">
-              <div class="conv-name">${esc(name)}</div>
-              <div class="conv-preview">${preview}</div>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-              <div class="conv-time">${ago}</div>
-              ${c.unread_count > 0 ? `<div class="conv-unread">${c.unread_count}</div>` : ''}
-            </div>
-          </div>`;
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <div class="conv-name">${esc(name)}</div>
+                  ${c.bot_active ? '<span class="bot-badge active">Bot</span>' : '<span class="bot-badge">Human</span>'}
+                </div>
+                <div class="conv-preview">${preview}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                <div class="conv-time">${ago}</div>
+                ${c.unread_count > 0 ? `<div class="conv-unread">${c.unread_count}</div>` : ''}
+              </div>
+            </div>`;
       }).join('');
     } catch (err) {
       scroll.innerHTML = '<div class="empty-state"><p>Failed to load</p></div>';
@@ -116,12 +119,19 @@ const InboxPage = (() => {
     }
     container.innerHTML = messages.map(m => {
       const out   = m.direction === 'outbound';
-      const text  = esc(m.content || '[media]');
       const time  = fmtTime(m.sent_at || m.created_at);
       const statusIcon = out ? (m.status === 'read' ? '✓✓' : m.status === 'delivered' ? '✓✓' : '✓') : '';
+      
+      let contentHtml = esc(m.content || '');
+      if (['image', 'video'].includes(m.type) && m.content) {
+          contentHtml = `<img src="${m.content}" class="msg-media" loading="lazy" onclick="window.open('${m.content}')" onerror="this.src='/img/file-broken.png'"/>`;
+      } else if (m.type === 'audio' && m.content) {
+          contentHtml = `<audio controls class="msg-media"><source src="${m.content}" type="audio/mpeg"></audio>`;
+      }
+      
       return `
         <div class="msg-bubble ${out ? 'out' : 'in'}">
-          ${text}
+          ${contentHtml}
           <div class="msg-time">${time} ${statusIcon ? `<span style="color:${m.status==='read'?'#53bdeb':'inherit'}">${statusIcon}</span>` : ''}</div>
         </div>`;
     }).join('');

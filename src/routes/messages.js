@@ -223,6 +223,7 @@ router.post('/send', async (req, res, next) => {
        VALUES ($1, 'open', false)
        ON CONFLICT (contact_id) DO UPDATE
          SET status = CASE WHEN conversations.status = 'resolved' THEN 'open' ELSE conversations.status END,
+             bot_active = false,
              updated_at = NOW()`,
       [contact_id]
     );

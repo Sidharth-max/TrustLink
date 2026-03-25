@@ -658,3 +658,37 @@ canvas { width: 100% !important; }
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+
+/* ── 26. Bot & Media Refinements ───────────────────────────────── */
+.bot-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text-3);
+  border: 1px solid var(--border);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.bot-badge.active {
+  background: var(--wa-green-dark);
+  color: #fff;
+  border-color: var(--wa-green-dark);
+}
+
+.msg-media {
+  display: block;
+  max-width: 100%;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  cursor: pointer;
+}
+.msg-bubble img.msg-media {
+  max-height: 300px;
+  object-fit: cover;
+}
+audio.msg-media {
+  height: 40px;
+  width: 240px;
+}
