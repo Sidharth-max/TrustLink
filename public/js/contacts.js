@@ -95,6 +95,7 @@ const ContactsPage = (() => {
 
 
   function downloadExampleCSV() {
+    console.log('Downloading CSV example...');
     const csvContent = "name,phone,tags\n"
       + "John Doe,919876543210,\"vip,lead\"\n"
       + "Jane Smith,15559876543,\"customer\"";
@@ -105,7 +106,7 @@ const ContactsPage = (() => {
     const link = document.createElement("a");
     link.href = url;
     link.setAttribute("download", "contacts_template.csv");
-    link.style.display = 'none';
+    link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -116,11 +117,21 @@ const ContactsPage = (() => {
     document.getElementById('add-contact-btn').onclick = openAdd;
     document.getElementById('import-csv-btn').onclick = () => toast('CSV import coming soon in this UI variant', 'info');
     
+    // Bind click handler in JS
     const exampleBtn = document.getElementById('example-csv-btn');
-    if (exampleBtn) exampleBtn.onclick = downloadExampleCSV;
+    if (exampleBtn) {
+      exampleBtn.onclick = (e) => {
+        e.preventDefault();
+        downloadExampleCSV();
+      };
+    }
 
     load();
   }
   
+  // Return public API
   return { init, load, openAdd, delete: deleteContact, downloadExampleCSV };
 })();
+
+// Ensure global access
+window.ContactsPage = ContactsPage;

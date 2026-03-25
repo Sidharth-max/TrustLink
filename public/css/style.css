@@ -76,7 +76,7 @@ body {
   color: var(--text);
   font-size: 14px;
   line-height: 1.6;
-  min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
   transition: background var(--transition), color var(--transition);
   -webkit-font-smoothing: antialiased;
@@ -90,7 +90,7 @@ svg {
 }
 
 button {
-  font-family: inherit; cursor: pointer; border: none; background: none;
+  font-family: inherit; cursor: pointer; border: none; background: none; color: inherit;
   display: inline-flex; align-items: center; justify-content: center;
   transition: all var(--transition);
 }
@@ -108,7 +108,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ── 4. App Shell ──────────────────────────────────────────────── */
-#app { display: none; height: 100vh; }
+#app { display: none; height: 100dvh; }
 #app.ready { display: flex; }
 
 
@@ -146,6 +146,21 @@ input:focus, select:focus, textarea:focus {
 @media (max-width: 768px) {
   /* .logout-toggle is now global, no change needed here */
   .theme-toggle { right: 20px; } /* Keep theme toggle on right */
+  
+  /* Hide global toggles when mobile chat view is open, so they don't overlay the header */
+  body.chat-active .theme-toggle,
+  body.chat-active .logout-toggle {
+    display: none !important;
+  }
+  body.chat-active .main-content {
+    padding-bottom: 0 !important;
+  }
+  
+  /* Adjusted chat header and input padding for extra small screens */
+  .chat-header { padding: 12px 16px !important; }
+  .chat-input-area { 
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom)) 16px !important; 
+  }
 }
 
 /* Sidebar Logout Button */
@@ -231,7 +246,7 @@ html.light .theme-toggle:hover {
 .btn-secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
 .btn-secondary:hover { background: var(--surface-3); border-color: var(--border-hover); transform: translateY(-1px); }
 
-.btn-icon { width: 40px; height: 40px; padding: 0; border-radius: 50%; display: grid; place-items: center; }
+.btn-icon { width: 40px; height: 40px; padding: 0; border-radius: 50%; display: grid; place-items: center; color: var(--text); }
 
 /* Cards */
 .card {
@@ -292,7 +307,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 
 /* ── 9. Inbox (Chat) ───────────────────────────────────────────── */
 .inbox-shell {
-  display: flex; height: calc(100vh - 120px); border: 1px solid var(--border);
+  display: flex; height: calc(100dvh - 120px); border: 1px solid var(--border);
   border-radius: 20px; overflow: hidden; background: var(--surface);
 }
 .conv-list { width: 340px; border-right: 1px solid var(--border); display: flex; flex-direction: column; }
@@ -374,7 +389,8 @@ html.light .bubble-in { background: #f1f5f9; border-color: transparent; }
   bottom: 0;
   left: 0;
   right: 0;
-  height: 64px;
+  height: calc(64px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
   background: var(--surface);
   border-top: 1px solid var(--border);
   z-index: 1000;
@@ -465,14 +481,14 @@ html.light .bubble-in { background: #f1f5f9; border-color: transparent; }
 /* ── Mobile ────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .sidebar { display: none; }
-  .main-content { margin-left: 0; padding-bottom: 80px; }
+  .main-content { margin-left: 0; padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
   .bottom-nav { display: flex; }
   .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   
   /* Inbox Mobile Toggling */
   .inbox-shell { 
-    height: calc(100vh - 128px); border: none; border-radius: 0; 
+    height: calc(100dvh - 128px); border: none; border-radius: 0; 
   }
   .conv-list { width: 100%; display: flex; }
   .chat-window { display: none; width: 100%; position: absolute; inset: 0; z-index: 50; }

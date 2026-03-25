@@ -77,6 +77,7 @@ const InboxPage = (() => {
     
     // UI state & Mobile Toggle
     document.getElementById('page-inbox').classList.add('show-chat');
+    document.body.classList.add('chat-active'); // Used to hide floating buttons on mobile
     document.getElementById('chat-empty').style.display    = 'none';
     document.getElementById('chat-view').style.display     = 'flex';
     document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('active'));
@@ -212,6 +213,7 @@ const InboxPage = (() => {
     // Mobile Back Button
     document.getElementById('chat-back-btn').onclick = () => {
       document.getElementById('page-inbox').classList.remove('show-chat');
+      document.body.classList.remove('chat-active');
     };
 
     document.getElementById('conv-search').oninput = (e) => loadList();

@@ -87,6 +87,13 @@
     if (!document.getElementById(`page-${page}`)) page = 'dashboard';
     currentPage = page;
 
+    // Turn off 'chat-active' mode globally when navigating elsewhere
+    document.body.classList.remove('chat-active');
+    
+    // Reset specific chat layouts
+    const inboxPage = document.getElementById('page-inbox');
+    if (inboxPage) inboxPage.classList.remove('show-chat');
+
     // Show/hide pages
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(`page-${page}`).classList.add('active');
@@ -143,6 +150,11 @@
     document.documentElement.classList.toggle('dark', !isLight);
     localStorage.setItem('theme', isLight ? 'light' : 'dark');
     updateThemeIcons();
+    
+    // Auto-refresh dashboard chart to adopt new theme colors
+    if (currentPage === 'dashboard' && window.DashboardPage) {
+      DashboardPage.load();
+    }
   };
 
   // ── Init ──────────────────────────────────────────────────────────
