@@ -14,11 +14,30 @@ echo "════════════════════════�
 echo "  WhatsApp Trust Manager — Restarting"
 echo "═══════════════════════════════════════"
 
-# 1. Kill existing process on the port (if any)
-PID=$(lsof -t -i:$PORT)
+# 1. Check for 'db' host in DATABASE_URL (common misconfiguration)
+if [[ "$DATABASE_URL" == *"@db:"* ]]; then
+  echo "⚠️  WARNING: Your DATABASE_URL contains '@db'. If you are not using Docker,"
+  echo "   this will fail with 'getaddrinfo EAI_AGAIN db'."
+  echo "   Please change '@db' to '@localhost' in your .env file."
+  echo ""
+fi
+
+# 2. Kill existing process on the port (if any)
+echo "Looking for processes on port $PORT..."
+PID=""
+if command -v lsof >/dev/null 2>&1; then
+  PID=$(lsof -t -i:$PORT)
+elif command -v fuser >/dev/null 2>&1; then
+  PID=$(fuser $PORT/tcp 2>/dev/null | awk '{print $NF}')
+fi
+
 if [ -n "$PID" ]; then
-  echo "Found process $PID on port $PORT. Killing..."
-  kill -9 $PID
+  echo "Found process(es) $PID on port $PORT. Killing..."
+  kill -9 $PID 2>/dev/null
+  sleep 2
+else
+  # Fallback: kill any node process running our server
+  pkill -f "node src/server.js" 2>/dev/null
   sleep 1
 fi
 
