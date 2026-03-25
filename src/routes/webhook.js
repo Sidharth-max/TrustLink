@@ -105,13 +105,14 @@ router.post('/', async (req, res) => {
     return res.sendStatus(400);
   }
 
-  console.log('[WEBHOOK] Payload Object:', payload.object);
+  // Validate top-level structure
   if (payload.object !== 'whatsapp_business_account') {
+    // Could be a different Meta product — just acknowledge and ignore
     return res.sendStatus(200);
   }
 
+  // ── Acknowledge immediately (Meta requires < 20 s response) ─────────────
   res.sendStatus(200);
-  console.log(`[WEBHOOK] Received payload with ${payload.entry?.length || 0} entries`);
 
   // ── Process asynchronously so we never block the HTTP response ──────────
   const changes = extractChanges(payload);

@@ -99,7 +99,6 @@ async function processIncomingMessage(message, metadata, contacts = []) {
     [contact.id]
   );
   const conversation = convRes.rows[0];
-  console.log(`[MSG] Conversation lookup for contact ${contact.id}: conv_id=${conversation.id} assigned_to=${conversation.assigned_to}`);
 
   // ── 6. Bot flow matching (only if bot is active for this conversation) ──
   if (conversation.bot_active && textContent) {
