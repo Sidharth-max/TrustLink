@@ -4,7 +4,7 @@
  */
 
 (() => {
-  let currentPage = localStorage.getItem('lastPage') || 'dashboard';
+  let currentPage = window.location.hash.replace('#', '') || localStorage.getItem('lastPage') || 'dashboard';
   let currentUser = null;
 
   const pageModules = {
@@ -87,6 +87,7 @@
     if (!document.getElementById(`page-${page}`)) page = 'dashboard';
     currentPage = page;
     localStorage.setItem('lastPage', page);
+    window.history.replaceState(null, '', `#${page}`);
 
     // Turn off 'chat-active' mode globally when navigating elsewhere
     document.body.classList.remove('chat-active');

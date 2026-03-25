@@ -44,10 +44,12 @@ function openModal(title, bodyHtml, footerHtml = '') {
   document.getElementById('modal-body').innerHTML    = bodyHtml;
   document.getElementById('modal-footer').innerHTML  = footerHtml;
   document.getElementById('modal-overlay').classList.add('open');
+  document.body.classList.add('modal-open');
 }
 
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
+  document.body.classList.remove('modal-open');
 }
 
 // ── Form Helpers ──────────────────────────────────────────────────

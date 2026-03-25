@@ -82,8 +82,10 @@ const InboxPage = (() => {
     document.getElementById('chat-view').style.display     = 'flex';
     document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('active'));
     
-    // Focus input
-    setTimeout(() => document.getElementById('chat-reply-input').focus(), 100);
+    // Focus input (Only on desktop to prevent mobile keyboard from jumping up)
+    if (window.innerWidth > 768) {
+      setTimeout(() => document.getElementById('chat-reply-input').focus(), 100);
+    }
 
     try {
       const { conversation, messages } = await API.conversation(id);

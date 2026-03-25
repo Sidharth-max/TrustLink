@@ -153,6 +153,12 @@ input:-webkit-autofill:active {
   background: rgba(239, 68, 68, 0.25);
 }
 
+/* Hide toggles when modal is open */
+body.modal-open .theme-toggle,
+body.modal-open .logout-toggle {
+  display: none !important;
+}
+
 @media (max-width: 768px) {
   /* .logout-toggle is now global, no change needed here */
   .theme-toggle { right: 20px; } /* Keep theme toggle on right */
@@ -497,6 +503,7 @@ html.light .bubble-in { background: #f1f5f9; border-color: transparent; }
 
 /* ── Mobile ────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  .btn { padding: 8px 16px; font-size: 13px; }
   .page { padding: 80px 16px 16px 16px; }
   .sidebar { display: none; }
   .main-content { margin-left: 0; padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
