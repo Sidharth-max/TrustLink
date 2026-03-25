@@ -84,5 +84,5 @@ app.use((err, req, res, next) => {
 app.listen(PORT, async () => {
   console.log(`[SERVER] Running on port ${PORT} (${process.env.NODE_ENV || 'development'})`);
   // Start the scheduled-message cron job
-  startScheduler();
+  // startScheduler();
 });

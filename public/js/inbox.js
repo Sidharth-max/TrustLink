@@ -175,7 +175,8 @@ const InboxPage = (() => {
   function startPolling(convId) {
     stopPolling();
     pollTimer = setInterval(async () => {
-      if (activeConvId === convId) await loadConv(convId);
+      await loadList(); // Refresh the list on the left
+      if (activeConvId === convId) await loadConv(convId); // Refresh the active chat
     }, 10000);
   }
   function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
