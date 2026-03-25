@@ -1,13 +1,11 @@
 /**
  * public/js/dashboard.js
- * Dashboard page: overview stats + Chart.js timeline chart + broadcast stats table.
- * Uses Chart.js loaded from CDN (injected dynamically so only loaded when needed).
+ * Dashboard page: overview stats + Chart.js timeline chart.
  */
 
 const DashboardPage = (() => {
   let chartInstance = null;
 
-  // Ensure Chart.js is available (lazy load from CDN)
   function ensureChart() {
     return new Promise((resolve) => {
       if (window.Chart) return resolve();
@@ -20,53 +18,42 @@ const DashboardPage = (() => {
 
   async function load() {
     try {
-      const [overview, timeline, broadcasts] = await Promise.all([
+      const [overview, timeline] = await Promise.all([
         API.analyticsOverview(),
-        API.analyticsTimeline({ from: daysAgo(30), to: today(), direction: 'all' }),
-        API.analyticsBroadcasts(),
+        API.analyticsTimeline({ from: daysAgo(14), to: today(), direction: 'all' }),
       ]);
 
-      // ── Stats cards ────────────────────────────────────────────
+      // ── Stats ──────────────────────────────────────────────────
       const c = overview.contacts;
       const m = overview.messages;
       const v = overview.conversations;
 
-      document.getElementById('stat-contacts').textContent   = c.total || 0;
-      document.getElementById('stat-opted-in').textContent   = `${c.opted_in || 0} opted in`;
-      document.getElementById('stat-sent').textContent       = m.total_sent || 0;
-      document.getElementById('stat-delivery').textContent   = `${m.delivery_rate || '0%'} delivery rate`;
-      document.getElementById('stat-read').textContent       = m.read || 0;
-      document.getElementById('stat-read-rate').textContent  = `${m.read_rate || '0%'} read rate`;
-      document.getElementById('stat-open').textContent       = v.open || 0;
-      document.getElementById('stat-conv-total').textContent = `${v.total || 0} total`;
+      const stats = document.getElementById('dashboard-stats');
+      stats.querySelectorAll('.stat-card').forEach(el => el.classList.remove('skeleton-pulse'));
 
-      // ── Timeline chart ─────────────────────────────────────────
+      document.getElementById('stat-contacts').textContent   = c.total || 0;
+      document.getElementById('stat-opted-in').innerHTML     = `<span class="delta-up">↑ ${c.opted_in || 0}</span> <span style="margin-left:4px">opted in</span>`;
+      
+      document.getElementById('stat-sent').textContent       = m.total_sent || 0;
+      document.getElementById('stat-delivery').innerHTML     = `<span class="delta-up">↑ ${m.delivery_rate || '0%'}</span> <span style="margin-left:4px">delivery</span>`;
+      
+      document.getElementById('stat-read').textContent       = m.read || 0;
+      document.getElementById('stat-read-rate').innerHTML    = `<span class="delta-up">↑ ${m.read_rate || '0%'}</span> <span style="margin-left:4px">read rate</span>`;
+      
+      document.getElementById('stat-open').textContent       = v.open || 0;
+      document.getElementById('stat-conv-total').textContent = `${v.total || 0} total sessions`;
+
+      // ── Timeline ───────────────────────────────────────────────
       await ensureChart();
       renderChart(timeline.timeline);
 
-      // ── Broadcast stats table ──────────────────────────────────
-      const tbody = document.getElementById('broadcast-stats-body');
-      if (!broadcasts.broadcasts.length) {
-        tbody.innerHTML = emptyRow(6, 'No completed broadcasts yet');
-      } else {
-        tbody.innerHTML = broadcasts.broadcasts.slice(0, 10).map(b => `
-          <tr>
-            <td data-label="Name">${esc(b.name)}</td>
-            <td data-label="Type"><span class="badge">${esc(b.type)}</span></td>
-            <td data-label="Sent">${b.sent_count || 0}</td>
-            <td data-label="Failed">${b.failed_count || 0}</td>
-            <td data-label="Success">${b.success_rate || 0}%</td>
-            <td data-label="Status">${statusBadge(b.status)}</td>
-          </tr>
-        `).join('');
-      }
     } catch (err) {
       console.error('Dashboard load error:', err);
+      toast('Failed to load dashboard data', 'error');
     }
   }
 
   function renderChart(timelineData) {
-    // Group by date summing counts per direction
     const dateMap = {};
     timelineData.forEach(row => {
       if (!dateMap[row.date]) dateMap[row.date] = { inbound: 0, outbound: 0 };
@@ -83,25 +70,71 @@ const DashboardPage = (() => {
 
     if (chartInstance) { chartInstance.destroy(); }
 
-    const dark = document.documentElement.classList.contains('light') ? false : true;
-    const gridColor = dark ? '#222222' : '#e5e5e5';
-    const textColor = dark ? '#888888' : '#666666';
+    const isDark = !document.documentElement.classList.contains('light');
+    const accent = '#6366f1';
+    const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+    const textColor = isDark ? '#9ca3af' : '#64748b';
 
     chartInstance = new Chart(ctx, {
-      type: 'bar',
+      type: 'line',
       data: {
         labels,
         datasets: [
-          { label: 'Sent', data: outbound, backgroundColor: '#ffffff', borderRadius: 4 },
-          { label: 'Received', data: inbound, backgroundColor: '#333333', borderRadius: 4 },
+          {
+            label: 'Messages Sent',
+            data: outbound,
+            borderColor: accent,
+            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            borderWidth: 2,
+          },
+          {
+            label: 'Messages Received',
+            data: inbound,
+            borderColor: isDark ? '#94a3b8' : '#475569',
+            backgroundColor: 'transparent',
+            tension: 0.4,
+            pointRadius: 0,
+            borderWidth: 1,
+            borderDash: [5, 5],
+          }
         ],
       },
       options: {
         responsive: true,
-        plugins: { legend: { labels: { color: textColor } } },
+        maintainAspectRatio: false,
+        plugins: { 
+          legend: { 
+            display: true, 
+            position: 'top',
+            align: 'end',
+            labels: { color: textColor, boxWidth: 12, usePointStyle: true, font: { family: 'Geist Sans', size: 11 } } 
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            backgroundColor: isDark ? '#1f2937' : '#ffffff',
+            titleColor: isDark ? '#ffffff' : '#000000',
+            bodyColor: isDark ? '#9ca3af' : '#475569',
+            borderColor: isDark ? '#374151' : '#e2e8f0',
+            borderWidth: 1,
+            padding: 12,
+            boxPadding: 4,
+          }
+        },
         scales: {
-          x: { stacked: true, ticks: { color: textColor, maxTicksLimit: 10 }, grid: { color: gridColor } },
-          y: { stacked: true, ticks: { color: textColor }, grid: { color: gridColor } },
+          x: { 
+            grid: { display: false },
+            ticks: { color: textColor, font: { size: 11 } }
+          },
+          y: { 
+            beginAtZero: true,
+            grid: { color: gridColor },
+            ticks: { color: textColor, font: { size: 11 }, maxTicksLimit: 5 }
+          },
         },
       },
     });
@@ -115,7 +148,11 @@ const DashboardPage = (() => {
   }
 
   function init() {
-    document.getElementById('refresh-stats-btn').addEventListener('click', load);
+    document.getElementById('refresh-stats-btn').addEventListener('click', () => {
+      const btn = document.getElementById('refresh-stats-btn');
+      btn.disabled = true;
+      load().finally(() => btn.disabled = false);
+    });
     load();
   }
 

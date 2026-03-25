@@ -1,106 +1,98 @@
 /**
  * public/js/agents.js
- * Agents management page (admin only).
+ * Agents management page: team members, role badges, and status.
+ * Redesigned for Premium Indigo/Slate.
  */
 
 const AgentsPage = (() => {
-  let editingId = null;
+  let agents = [];
 
   async function load() {
     const tbody = document.getElementById('agents-tbody');
-    tbody.innerHTML = `<tr><td colspan="5" class="loading-row"><div class="spinner"></div></td></tr>`;
+    tbody.innerHTML = '<tr><td colspan="5"><div class="loading-row"><div class="spinner"></div></div></td></tr>';
+
     try {
-      const { agents } = await API.agents();
-      if (!agents.length) { tbody.innerHTML = emptyRow(5); return; }
+      const data = await API.agents();
+      agents = data.agents || [];
+
+      if (agents.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No agents found</div></td></tr>';
+        return;
+      }
+
       tbody.innerHTML = agents.map(a => `
         <tr>
-          <td data-label="Name">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div class="agent-avatar" style="width:32px;height:32px;font-size:.8rem;">${initials(a.name)}</div>
-              <strong>${esc(a.name)}</strong>
+          <td>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div class="logo-box" style="width:32px; height:32px; background:var(--surface-3); font-size:12px;">${initials(a.name)}</div>
+              <div>
+                <div style="font-weight:600;">${esc(a.name)}</div>
+                <div style="font-size:11px; color:var(--text-muted)">ID: ${a.id}</div>
+              </div>
             </div>
           </td>
-          <td data-label="Email">${esc(a.email)}</td>
-          <td data-label="Role">${statusBadge(a.role)}</td>
-          <td data-label="Joined">${fmtDate(a.created_at)}</td>
-          <td data-label="Actions">
-            <div style="display:flex;gap:6px;">
-              <button class="btn btn-ghost btn-sm" onclick="AgentsPage.edit(${a.id})">✏️</button>
-              <button class="btn btn-ghost btn-sm" onclick="AgentsPage.remove(${a.id},'${esc(a.name)}')">🗑️</button>
-            </div>
+          <td><span style="color:var(--text-secondary)">${esc(a.email)}</span></td>
+          <td>${statusBadge(a.role)}</td>
+          <td><span style="font-size:13px; color:var(--text-muted)">${fmtDate(a.created_at)}</span></td>
+          <td>
+             <div style="display:flex; gap:8px;">
+               <button class="btn btn-secondary btn-icon btn-sm" onclick="AgentsPage.edit(${a.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+               <button class="btn btn-secondary btn-icon btn-sm" style="color:var(--error)" onclick="AgentsPage.delete(${a.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>
+             </div>
           </td>
         </tr>
       `).join('');
     } catch (err) {
-      if (err.message.includes('403') || err.message.includes('Forbidden')) {
-        tbody.innerHTML = emptyRow(5, 'Admin access required to view agents');
-      } else {
-        tbody.innerHTML = emptyRow(5, 'Failed to load');
-      }
+      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">Access required to view agents</div></td></tr>';
     }
   }
 
-  function openCreate() {
-    editingId = null;
-    document.getElementById('agent-modal-title').textContent = 'Add Agent';
-    document.getElementById('a-id').value       = '';
-    document.getElementById('a-name').value     = '';
-    document.getElementById('a-email').value    = '';
-    document.getElementById('a-password').value = '';
-    document.getElementById('a-role').value     = 'agent';
-    document.getElementById('a-pwd-label').textContent = 'Password *';
-    openModal('agent-modal');
-  }
-
-  async function edit(id) {
-    editingId = id;
-    try {
-      const { agents } = await API.agents();
-      const a = agents.find(x => x.id === id);
-      if (!a) return;
-      document.getElementById('agent-modal-title').textContent = 'Edit Agent';
-      document.getElementById('a-id').value    = a.id;
-      document.getElementById('a-name').value  = a.name;
-      document.getElementById('a-email').value = a.email;
-      document.getElementById('a-password').value = '';
-      document.getElementById('a-role').value  = a.role;
-      document.getElementById('a-pwd-label').textContent = 'New Password (leave blank to keep)';
-      openModal('agent-modal');
-    } catch (err) { toast(err.message, 'error'); }
+  function openAdd() {
+    const body = `
+      <form id="agent-form" style="display:flex; flex-direction:column; gap:16px;">
+        <div><label class="stat-label">Full Name</label><input type="text" name="name" required></div>
+        <div><label class="stat-label">Email</label><input type="email" name="email" required></div>
+        <div><label class="stat-label">Password</label><input type="password" name="password" required></div>
+        <div>
+          <label class="stat-label">Role</label>
+          <select name="role">
+            <option value="agent">Agent</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+      </form>
+    `;
+    const footer = `
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="save-agent-btn">Add Agent</button>
+    `;
+    openModal('New Team Member', body, footer);
+    document.getElementById('save-agent-btn').onclick = save;
   }
 
   async function save() {
-    const id = document.getElementById('a-id').value;
-    const payload = {
-      name:     document.getElementById('a-name').value.trim(),
-      email:    document.getElementById('a-email').value.trim(),
-      role:     document.getElementById('a-role').value,
-    };
-    const pwd = document.getElementById('a-password').value;
-    if (pwd) payload.password = pwd;
-
-    if (!payload.name || !payload.email) { toast('Name and email required', 'error'); return; }
-    if (!id && !pwd) { toast('Password required for new agent', 'error'); return; }
-
+    const data = getFormData('agent-form');
     try {
-      if (id) { await API.updateAgent(id, payload); toast('Agent updated'); }
-      else    { await API.createAgent(payload);      toast('Agent created'); }
-      closeModal('agent-modal');
+      await API.createAgent(data);
+      toast('Agent added');
+      closeModal();
       load();
     } catch (err) { toast(err.message, 'error'); }
   }
 
-  async function remove(id, name) {
-    if (!confirm(`Delete agent "${name}"?`)) return;
-    try { await API.deleteAgent(id); toast('Agent deleted'); load(); }
-    catch (err) { toast(err.message, 'error'); }
+  async function deleteAgent(id) {
+    if (!confirm('Are you sure?')) return;
+    try {
+      await API.deleteAgent(id);
+      toast('Agent deleted');
+      load();
+    } catch (err) { toast(err.message, 'error'); }
   }
 
   function init() {
-    document.getElementById('new-agent-btn').addEventListener('click', openCreate);
-    document.getElementById('save-agent-btn').addEventListener('click', save);
+    document.getElementById('new-agent-btn').onclick = openAdd;
     load();
   }
 
-  return { init, load, edit, remove };
+  return { init, load, openAdd, delete: deleteAgent };
 })();

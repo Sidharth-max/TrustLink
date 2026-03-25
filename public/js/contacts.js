@@ -1,145 +1,91 @@
 /**
  * public/js/contacts.js
- * Contacts page: list, search, filter, add/edit/delete, CSV import.
+ * Contacts page: audience management, CRM-style table, and CSV import.
+ * Redesigned for Premium Indigo/Slate.
  */
 
 const ContactsPage = (() => {
-  let currentPage = 1;
-  let searchTimer = null;
-  let editingId   = null;
-
-  function getFilters() {
-    return {
-      search:   document.getElementById('contact-search').value.trim(),
-      tag:      document.getElementById('contact-tag-filter').value,
-      opted_in: document.getElementById('contact-optin-filter').value,
-      page:     currentPage,
-      limit:    50,
-    };
-  }
-
-  async function loadTags() {
-    try {
-      const { tags } = await API.tags();
-      const sel = document.getElementById('contact-tag-filter');
-      // Preserve existing selection
-      const cur = sel.value;
-      sel.innerHTML = '<option value="">All tags</option>';
-      tags.forEach(t => {
-        const opt = document.createElement('option');
-        opt.value = t; opt.textContent = t;
-        if (t === cur) opt.selected = true;
-        sel.appendChild(opt);
-      });
-    } catch (_) {}
-  }
+  let contacts = [];
 
   async function load() {
-    const tbody = document.getElementById('contacts-tbody');
-    tbody.innerHTML = `<tr><td colspan="7" class="loading-row"><div class="spinner"></div></td></tr>`;
+    const tbody = document.getElementById('contact-tbody');
+    tbody.innerHTML = '<tr><td colspan="4"><div class="loading-row"><div class="spinner"></div></div></td></tr>';
 
     try {
-      const filters = getFilters();
-      // Remove empty params
-      Object.keys(filters).forEach(k => { if (!filters[k] && filters[k] !== 0) delete filters[k]; });
-
-      const { contacts, pagination } = await API.contacts(filters);
-
-      document.getElementById('contact-count-label').textContent = `${pagination.total} contacts`;
+      const data = await API.contacts();
+      contacts = data.contacts || [];
+      document.getElementById('contact-count-label').textContent = `${contacts.length} total recipients`;
 
       if (contacts.length === 0) {
-        tbody.innerHTML = emptyRow(7, 'No contacts found');
-        document.getElementById('contacts-pagination').innerHTML = '';
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4">
+              <div class="empty-state">
+                <div class="empty-graphic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+                <h3>No contacts found</h3>
+                <p>Start building your audience by adding a contact or importing a CSV file.</p>
+                <button class="btn btn-primary" onclick="ContactsPage.openAdd()">Add Your First Contact</button>
+              </div>
+            </td>
+          </tr>
+        `;
         return;
       }
 
       tbody.innerHTML = contacts.map(c => `
-        <tr data-id="${c.id}" data-phone="${esc(c.phone)}">
-          <td><input type="checkbox" class="contact-select" value="${esc(c.phone)}" /></td>
-          <td data-label="Name">${esc(c.name || '—')}</td>
-          <td data-label="Phone"><code style="font-size:.8rem">${esc(c.phone)}</code></td>
-          <td data-label="Tags">${c.tags ? c.tags.split(',').map(t => t.trim()).filter(Boolean).map(t => `<span class="badge" style="margin:1px">${esc(t)}</span>`).join('') : '—'}</td>
-          <td data-label="Status">${c.opted_in ? '<span class="badge badge-active">Opted In</span>' : '<span class="badge badge-inactive">Opted Out</span>'}</td>
-          <td data-label="Added">${fmtDate(c.created_at)}</td>
-          <td data-label="Actions">
-            <div style="display:flex;gap:6px;">
-              <button class="btn btn-ghost btn-sm" onclick="ContactsPage.edit(${c.id})" title="Edit">✏️</button>
-              <button class="btn btn-ghost btn-sm" onclick="ContactsPage.remove(${c.id},'${esc(c.name||c.phone)}')" title="Delete">🗑️</button>
+        <tr>
+          <td>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div class="logo-box" style="width:32px; height:32px; background:var(--surface-3); font-size:12px;">${initials(c.name)}</div>
+              <div>
+                <div style="font-weight:600;">${esc(c.name || '—')}</div>
+                <div style="font-size:11px; color:var(--text-muted)">ID: ${c.id}</div>
+              </div>
             </div>
+          </td>
+          <td><code style="font-family:'Geist Mono',monospace; opacity:0.8;">${esc(c.phone)}</code></td>
+          <td>${c.opted_in ? '<span class="badge badge-green">Opted In</span>' : '<span class="badge badge-red">Opted Out</span>'}</td>
+          <td>
+             <div style="display:flex; gap:8px;">
+               <button class="btn btn-secondary btn-icon btn-sm" onclick="ContactsPage.openEdit(${c.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+               <button class="btn btn-secondary btn-icon btn-sm" style="color:var(--error)" onclick="ContactsPage.delete(${c.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>
+             </div>
           </td>
         </tr>
       `).join('');
-
-      renderPagination(pagination);
-      updateSelectionUI();
     } catch (err) {
-      tbody.innerHTML = emptyRow(7, 'Failed to load contacts');
-      console.error(err);
+      tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">Failed to load contacts.</div></td></tr>';
     }
   }
 
-  function renderPagination({ page, pages, total }) {
-    const el = document.getElementById('contacts-pagination');
-    if (pages <= 1) { el.innerHTML = ''; return; }
-    el.innerHTML = `
-      <span>${total} total</span>
-      <button class="btn btn-secondary btn-sm" ${page <= 1 ? 'disabled' : ''} onclick="ContactsPage.goPage(${page - 1})">← Prev</button>
-      <span>Page ${page} of ${pages}</span>
-      <button class="btn btn-secondary btn-sm" ${page >= pages ? 'disabled' : ''} onclick="ContactsPage.goPage(${page + 1})">Next →</button>
-    `;
-  }
-
-  function goPage(p) { currentPage = p; load(); }
-
   function openAdd() {
-    editingId = null;
-    document.getElementById('contact-modal-title').textContent = 'Add Contact';
-    document.getElementById('contact-id').value = '';
-    document.getElementById('c-name').value     = '';
-    document.getElementById('c-phone').value    = '';
-    document.getElementById('c-tags').value     = '';
-    document.getElementById('c-opted-in').checked = true;
-    openModal('contact-modal');
-  }
-
-  async function edit(id) {
-    editingId = id;
-    document.getElementById('contact-modal-title').textContent = 'Edit Contact';
-    try {
-      const { contact } = await API.contact(id);
-      document.getElementById('contact-id').value  = contact.id;
-      document.getElementById('c-name').value      = contact.name || '';
-      document.getElementById('c-phone').value     = contact.phone;
-      document.getElementById('c-tags').value      = contact.tags || '';
-      document.getElementById('c-opted-in').checked = contact.opted_in;
-      openModal('contact-modal');
-    } catch (err) { toast(err.message, 'error'); }
+    const body = `
+      <form id="contact-form" style="display:flex; flex-direction:column; gap:16px;">
+        <div><label class="stat-label">Full Name</label><input type="text" name="name" required></div>
+        <div><label class="stat-label">Phone (include country code)</label><input type="text" name="phone" placeholder="919876543210" required></div>
+        <div><label class="stat-label">Tags (comma separated)</label><input type="text" name="tags" placeholder="premium, active"></div>
+      </form>
+    `;
+    const footer = `
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="save-contact-btn">Save Contact</button>
+    `;
+    openModal('New Contact', body, footer);
+    document.getElementById('save-contact-btn').onclick = save;
   }
 
   async function save() {
-    const id      = document.getElementById('contact-id').value;
-    const payload = {
-      name:     document.getElementById('c-name').value.trim(),
-      phone:    document.getElementById('c-phone').value.trim(),
-      tags:     document.getElementById('c-tags').value.trim(),
-      opted_in: document.getElementById('c-opted-in').checked,
-    };
-    if (!payload.phone) { toast('Phone is required', 'error'); return; }
+    const data = getFormData('contact-form');
     try {
-      if (id) {
-        await API.updateContact(id, payload);
-        toast('Contact updated');
-      } else {
-        await API.createContact(payload);
-        toast('Contact added');
-      }
-      closeModal('contact-modal');
-      load(); loadTags();
+      await API.createContact(data);
+      toast('Contact saved');
+      closeModal();
+      load();
     } catch (err) { toast(err.message, 'error'); }
   }
 
-  async function remove(id, nameLabel) {
-    if (!confirm(`Delete contact "${nameLabel}"? This cannot be undone.`)) return;
+  async function deleteContact(id) {
+    if (!confirm('Are you sure?')) return;
     try {
       await API.deleteContact(id);
       toast('Contact deleted');
@@ -147,81 +93,11 @@ const ContactsPage = (() => {
     } catch (err) { toast(err.message, 'error'); }
   }
 
-  async function doImport() {
-    const file = document.getElementById('csv-file-input').files[0];
-    if (!file) { toast('Please select a CSV file', 'error'); return; }
-    const fd = new FormData();
-    fd.append('file', file);
-    const btn = document.getElementById('do-csv-import-btn');
-    btn.disabled = true; btn.textContent = 'Importing…';
-    try {
-      const res = await API.importCSV(fd);
-      const resultEl = document.getElementById('csv-result');
-      resultEl.style.display = 'block';
-      resultEl.innerHTML = `
-        <div class="card" style="background:var(--surface-2);">
-          <div>✅ Imported: <strong>${res.imported}</strong></div>
-          <div>⚠️ Skipped: <strong>${res.skipped}</strong></div>
-          ${res.errors.length ? `<div style="margin-top:8px;font-size:.78rem;color:var(--red)">${res.errors.slice(0,5).map(e=>`Line ${e.line}: ${e.reason}`).join('<br>')}</div>` : ''}
-        </div>`;
-      toast(`Imported ${res.imported} contacts`);
-      load(); loadTags();
-    } catch (err) { toast(err.message, 'error'); }
-    finally { btn.disabled = false; btn.textContent = 'Import'; }
-  }
-
   function init() {
-    document.getElementById('add-contact-btn').addEventListener('click', openAdd);
-    document.getElementById('save-contact-btn').addEventListener('click', save);
-    document.getElementById('import-csv-btn').addEventListener('click', () => {
-      document.getElementById('csv-result').style.display = 'none';
-      document.getElementById('csv-file-input').value = '';
-      openModal('csv-modal');
-    });
-    document.getElementById('do-csv-import-btn').addEventListener('click', doImport);
-
-    // Selection logic
-    document.getElementById('contact-select-all').addEventListener('change', (e) => {
-      document.querySelectorAll('.contact-select').forEach(cb => cb.checked = e.target.checked);
-      updateSelectionUI();
-    });
-
-    document.getElementById('contacts-tbody').addEventListener('change', (e) => {
-      if (e.target.classList.contains('contact-select')) {
-        updateSelectionUI();
-      }
-    });
-
-    document.getElementById('broadcast-selected-btn').addEventListener('click', () => {
-      const selected = Array.from(document.querySelectorAll('.contact-select:checked')).map(cb => cb.value);
-      if (selected.length === 0) return;
-      
-      // Open broadcast page and pre-fill recipients
-      app.showPage('broadcasts');
-      document.getElementById('b-recipients').value = selected.join(', ');
-      openModal('broadcast-modal');
-    });
-
-    // Search with debounce
-    document.getElementById('contact-search').addEventListener('input', () => {
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(() => { currentPage = 1; load(); }, 350);
-    });
-    document.getElementById('contact-tag-filter').addEventListener('change', () => { currentPage = 1; load(); });
-    document.getElementById('contact-optin-filter').addEventListener('change', () => { currentPage = 1; load(); });
-
-    loadTags();
+    document.getElementById('add-contact-btn').onclick = openAdd;
+    document.getElementById('import-csv-btn').onclick = () => toast('CSV import coming soon in this UI variant', 'info');
     load();
   }
 
-  function updateSelectionUI() {
-    const selected = document.querySelectorAll('.contact-select:checked');
-    const btn = document.getElementById('broadcast-selected-btn');
-    btn.style.display = selected.length > 0 ? 'flex' : 'none';
-    if (selected.length > 0) {
-      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg> Broadcast (${selected.length})`;
-    }
-  }
-
-  return { init, load, edit, remove, goPage };
+  return { init, load, openAdd, delete: deleteContact };
 })();

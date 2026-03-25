@@ -3,529 +3,321 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WhatsApp Trust Manager</title>
-  <meta name="description" content="WhatsApp messaging dashboard for trust management — contacts, inbox, broadcasts, analytics" />
+  <title>Trust Manager | WhatsApp Dashboard</title>
   <link rel="stylesheet" href="/css/style.css" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='12' fill='%23128C7E'/><path d='M12 4.5C7.86 4.5 4.5 7.86 4.5 12c0 1.35.36 2.64.99 3.75L4.5 19.5l3.75-.99A7.47 7.47 0 0012 19.5c4.14 0 7.5-3.36 7.5-7.5S16.14 4.5 12 4.5z' fill='%23fff'/></svg>" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%236366F1'/><path d='M12 6v12M6 12h12' stroke='white' stroke-width='2'/></svg>" />
 </head>
-<body>
-  <button class="btn btn-icon theme-toggle" id="theme-toggle" title="Toggle Theme">
-    <svg id="sun-icon" style="display:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="4.22" x2="19.78" y2="5.64"/></svg>
-    <svg id="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-  </button>
+<body class="dark">
+  <div id="toast-container"></div>
 
 <!-- ══════════════════════════════════════════════════════
-     LOGIN PAGE (shown when not authenticated)
-════════════════════════════════════════════════════════ -->
-<div id="login-page">
-  <div class="login-card">
-    <div class="login-logo">
-      <div class="login-logo-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.37 5.07L2 22l4.93-1.37A9.97 9.97 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>
+     LOGIN PAGE
+     ════════════════════════════════════════════════════════ -->
+<div id="login-page" style="display:none;">
+  <div class="modal-overlay open">
+    <div class="modal" style="width:400px; padding:40px; text-align:center;">
+      <div class="logo-box" style="margin:0 auto 24px; width:48px; height:48px;">
+        <svg viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.37 5.07L2 22l4.93-1.37A9.97 9.97 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>
       </div>
-      <div>
-        <h1>Trust Manager</h1>
-        <span>WhatsApp Admin Panel</span>
-      </div>
+      <h2 style="font-size:24px; margin-bottom:8px;">Welcome back</h2>
+      <p style="color:var(--text-secondary); margin-bottom:32px;">Please enter your details to sign in.</p>
+      <div id="login-error" class="badge badge-red" style="display:none; margin-bottom:16px; width:100%; justify-content:center;"></div>
+      <form id="login-form">
+        <input type="email" id="login-email" placeholder="Email address" required style="margin-bottom:12px;">
+        <input type="password" id="login-password" placeholder="Password" required style="margin-bottom:24px;">
+        <button type="submit" class="btn btn-primary" id="login-btn" style="width:100%;">Sign In</button>
+      </form>
     </div>
-    <h2>Welcome back</h2>
-    <p class="sub">Sign in to manage your WhatsApp inbox</p>
-    <div class="error-msg" id="login-error"></div>
-    <form id="login-form">
-      <div class="form-group">
-        <label for="login-email">Email address</label>
-        <input type="email" id="login-email" placeholder="admin@trust.org" required autocomplete="email" />
-      </div>
-      <div class="form-group">
-        <label for="login-password">Password</label>
-        <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password" />
-      </div>
-      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;" id="login-btn">
-        Sign In
-      </button>
-    </form>
   </div>
 </div>
 
 <!-- ══════════════════════════════════════════════════════
-     APP SHELL (shown after login)
-════════════════════════════════════════════════════════ -->
+     APP SHELL
+     ════════════════════════════════════════════════════════ -->
 <div id="app">
+  <!-- Theme Toggle in Top Right -->
+  <button class="btn btn-icon theme-toggle" id="theme-toggle">
+    <svg id="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="4.22" x2="19.78" y2="5.64"/></svg>
+    <svg id="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
 
-  <!-- ── Sidebar ── -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="logo-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.37 5.07L2 22l4.93-1.37A9.97 9.97 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>
+      <div class="logo-box">
+        <svg viewBox="0 0 24 24" fill="white"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
       </div>
-      <div><h1>Trust Manager</h1><span>WhatsApp Admin</span></div>
+      <div><h1>Trust Manager</h1><p style="font-size:11px;color:var(--text-muted)">WhatsApp Admin</p></div>
     </div>
 
     <nav class="sidebar-nav">
-      <div class="nav-item active" data-page="dashboard">
-        <!-- bar chart icon -->
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        Dashboard
-      </div>
-      <div class="nav-item" data-page="inbox">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-        Inbox
-        <span class="badge" id="inbox-badge" style="display:none">0</span>
-      </div>
-      <div class="nav-item" data-page="contacts">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-        Contacts
-      </div>
-      <div class="nav-item" data-page="broadcasts">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-        Broadcasts
-      </div>
-      <div class="nav-item" data-page="bot">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M12 11V7M9 7h6M9 3h6v4H9z"/></svg>
-        Bot Flows
-      </div>
-      <div class="nav-item" data-page="agents" id="agents-nav-item">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        Agents
-      </div>
+      <div class="nav-section-label">Main Menu</div>
+      <a href="#" class="nav-item active" data-page="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <a href="#" class="nav-item" data-page="inbox">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <span>Inbox</span>
+        <span class="nav-badge" id="inbox-badge" style="display:none;">0</span>
+      </a>
+      <a href="#" class="nav-item" data-page="contacts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        <span>Contacts</span>
+      </a>
+      <a href="#" class="nav-item" data-page="broadcasts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        <span>Broadcasts</span>
+      </a>
+
+      <div class="nav-section-label">Automation</div>
+      <a href="#" class="nav-item" data-page="bot">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M12 11V7M9 7h6M9 3h6v4H9z"/></svg>
+        <span>Bot Flows</span>
+      </a>
+      <a href="#" class="nav-item" data-page="agents" id="agents-nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span>Agents</span>
+      </a>
     </nav>
 
     <div class="sidebar-footer">
-      <div class="agent-info" id="agent-info-btn">
-        <div class="agent-avatar" id="sidebar-avatar">A</div>
-        <div class="agent-details">
-          <div class="name" id="sidebar-name">Loading…</div>
-          <div class="role" id="sidebar-role">agent</div>
+      <div class="agent-card">
+        <div class="logo-box" style="width:32px; height:32px; background:var(--surface-3); font-size:12px;" id="sidebar-avatar">A</div>
+        <div style="flex:1;">
+          <div id="sidebar-name" style="font-weight:600; font-size:13px;">Admin</div>
+          <div id="sidebar-role" style="font-size:11px; color:var(--text-muted)">admin</div>
         </div>
-        <button class="logout-btn btn" id="logout-btn" title="Logout">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-        </button>
+        <button class="btn btn-icon" id="logout-btn" style="width:28px; height:28px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>
       </div>
     </div>
   </aside>
 
-  <!-- ── Main Content ── -->
-  <main class="main-content">
+  <!-- Sticky Bottom Nav (Mobile Only) -->
+  <nav class="bottom-nav">
+    <a href="#" class="bottom-nav-item active" data-page="inbox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <span>Inbox</span>
+    </a>
+    <a href="#" class="bottom-nav-item" data-page="contacts">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      <span>Contacts</span>
+    </a>
+    <a href="#" class="bottom-nav-item" data-page="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span>Stats</span>
+    </a>
+    <a href="#" class="bottom-nav-item" data-page="broadcasts">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      <span>Broadcast</span>
+    </a>
+    <a href="#" class="bottom-nav-item" data-page="bot">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M12 11V7M9 7h6M9 3h6v4H9z"/></svg>
+      <span>Bot</span>
+    </a>
+  </nav>
 
-    <!-- ═══ DASHBOARD ═══ -->
+  <main class="main-content">
+    
+    <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
       <div class="page-header">
-        <div><h2>Dashboard</h2><div class="subtitle">Overview &amp; analytics</div></div>
-        <div class="header-actions">
-          <button class="btn btn-secondary btn-sm" id="refresh-stats-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
-            Refresh
-          </button>
+        <div class="page-title">
+          <h2>Dashboard</h2>
+          <p>Real-time analytics and performance</p>
+        </div>
+        <button class="btn btn-secondary" id="refresh-stats-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+          Refresh
+        </button>
+      </div>
+
+      <div class="stats-grid" id="dashboard-stats">
+        <div class="card stat-card skeleton-pulse">
+           <div class="stat-label">Contacts</div>
+           <div class="stat-value" id="stat-contacts">—</div>
+           <div class="stat-delta" id="stat-opted-in">—</div>
+        </div>
+        <div class="card stat-card skeleton-pulse">
+           <div class="stat-label">Messages Sent</div>
+           <div class="stat-value" id="stat-sent">—</div>
+           <div class="stat-delta" id="stat-delivery">—</div>
+        </div>
+        <div class="card stat-card skeleton-pulse">
+           <div class="stat-label">Engagement</div>
+           <div class="stat-value" id="stat-read">—</div>
+           <div class="stat-delta" id="stat-read-rate">—</div>
+        </div>
+        <div class="card stat-card skeleton-pulse">
+           <div class="stat-label">Conversations</div>
+           <div class="stat-value" id="stat-open">—</div>
+           <div class="stat-delta" id="stat-conv-total">—</div>
         </div>
       </div>
-      <div class="page-body" id="dashboard-body">
-        <div class="stats-grid" id="stats-grid">
-          <div class="card"><div class="card-title">Total Contacts</div><div class="card-value" id="stat-contacts">—</div><div class="card-sub" id="stat-opted-in">— opted in</div></div>
-          <div class="card"><div class="card-title">Messages Sent</div><div class="card-value" id="stat-sent">—</div><div class="card-sub" id="stat-delivery">—% delivery rate</div></div>
-          <div class="card"><div class="card-title">Messages Read</div><div class="card-value" id="stat-read">—</div><div class="card-sub" id="stat-read-rate">—% read rate</div></div>
-          <div class="card"><div class="card-title">Open Conversations</div><div class="card-value" id="stat-open">—</div><div class="card-sub" id="stat-conv-total">— total</div></div>
-        </div>
-        <div class="chart-card mb-3">
-          <h3>Messages (Last 30 Days)</h3>
-          <canvas id="timeline-chart" height="80"></canvas>
-        </div>
-        <div class="chart-card">
-          <h3>Recent Broadcasts</h3>
-          <div class="table-wrap table-card" id="broadcast-stats-table">
-            <table>
-              <thead><tr><th>Name</th><th>Template</th><th>Sent</th><th>Failed</th><th>Success</th><th>Status</th></tr></thead>
-              <tbody id="broadcast-stats-body"><tr><td colspan="6" class="loading-row"><div class="spinner"></div></td></tr></tbody>
-            </table>
-          </div>
+
+      <div class="card" style="margin-top:24px;">
+        <h3 style="margin-bottom:20px;">Messages Timeline</h3>
+        <div style="height: 300px; position: relative; width: 100%;">
+          <canvas id="timeline-chart"></canvas>
         </div>
       </div>
     </div>
 
-    <!-- ═══ INBOX ═══ -->
+    <!-- INBOX -->
     <div class="page" id="page-inbox">
-      <div class="page-header">
-        <div><h2>Inbox</h2><div class="subtitle">All conversations</div></div>
-        <div class="header-actions">
-          <select id="conv-status-filter" style="max-width:130px;min-height:36px;padding:6px 10px;font-size:.85rem;">
-            <option value="open">Open</option>
-            <option value="pending">Pending</option>
-            <option value="resolved">Resolved</option>
-            <option value="all">All</option>
-          </select>
+       <div class="page-header">
+        <div class="page-title">
+          <h2>Inbox</h2>
+          <p>Managed conversations and replies</p>
         </div>
       </div>
-      <div class="page-body-flush">
-        <div class="inbox-layout" id="inbox-layout">
-          <!-- Conversation list -->
-          <div class="conv-list-panel" id="conv-list-panel">
-            <div class="panel-header">
-              <h3>Conversations</h3>
-              <div class="search-box flex-1">
-                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-                <input type="search" id="conv-search" placeholder="Search…" style="max-width:unset;" />
-              </div>
-            </div>
-            <div class="conv-list-scroll" id="conv-list-scroll">
-              <div class="loading-row"><div class="spinner"></div></div>
-            </div>
+      <div class="inbox-shell">
+        <div class="conv-list">
+          <!-- SEARCH BOX -->
+          <div style="padding:16px; border-bottom:1px solid var(--border)">
+             <div class="search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="conv-search" placeholder="Search chats...">
+             </div>
           </div>
-
-          <!-- Chat detail -->
-          <div class="chat-panel" id="chat-panel">
-            <div class="chat-empty" id="chat-empty">
-              <div>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:64px;height:64px;opacity:.3;display:block;margin:0 auto 12px"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                <p>Select a conversation to start chatting</p>
-              </div>
-            </div>
-            <div id="chat-view" style="display:none;flex-direction:column;height:100%;overflow:hidden;display:none;">
-              <div class="chat-header">
-                <button class="btn btn-ghost back-btn btn-sm" id="chat-back-btn">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M15 18l-6-6 6-6"/></svg>
-                </button>
-                <div class="conv-avatar" id="chat-avatar">?</div>
-                <div style="flex:1;min-width:0;">
-                  <div class="font-bold truncate" id="chat-name">—</div>
-                  <div class="text-xs" id="chat-phone">—</div>
-                </div>
-                <div class="header-actions" style="gap:6px;">
-                  <select id="chat-status-sel" title="Set conversation status" style="font-size:.8rem;padding:5px 8px;min-height:36px;max-width:120px;">
-                    <option value="open">Open</option>
-                    <option value="pending">Pending</option>
-                    <option value="resolved">Resolved</option>
-                  </select>
-                  <select id="chat-assign-sel" title="Assign to agent" style="font-size:.8rem;padding:5px 8px;min-height:36px;max-width:140px;"></select>
-                  <label class="toggle" title="Toggle bot">
-                    <input type="checkbox" id="bot-toggle-chk" />
-                    <span class="toggle-slider"></span>
-                  </label>
-                  <span class="text-xs text-muted">Bot</span>
-                </div>
-              </div>
-              <div class="chat-messages" id="chat-messages"></div>
-              <div class="chat-input-bar">
-                <textarea id="chat-reply-input" placeholder="Type a reply…" rows="1"></textarea>
-                <button class="send-btn" id="chat-send-btn" title="Send">
-                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-                </button>
-              </div>
-            </div>
+          <!-- INBOX TABS -->
+          <div class="inbox-tabs">
+             <div class="inbox-tab active" data-filter="all">All Chats</div>
+             <div class="inbox-tab" data-filter="unread">Unread</div>
+             <div class="inbox-tab" data-filter="assigned">Assigned</div>
           </div>
+          <div id="conv-list-scroll" style="flex:1; overflow-y:auto;">
+             <!-- Skeletons loaded via JS -->
+          </div>
+        </div>
+        <div class="chat-window" id="chat-window">
+           <div class="empty-state" id="chat-empty">
+              <!-- Illustrated Empty State -->
+              <div class="empty-graphic" style="color:var(--primary); opacity:0.8;">
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              </div>
+              <h3>No chat selected</h3>
+              <p>Pick a conversation from the left to start messaging your customers in real-time.</p>
+           </div>
+           <div id="chat-view" style="display:none; flex-direction:column; height:100%;">
+              <div style="padding:16px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; background:var(--surface);">
+                 <button class="btn btn-icon back-btn" id="chat-back-btn" style="display:none; margin-right:8px; width:32px; height:32px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                 </button>
+                 <div class="logo-box" id="chat-avatar" style="width:40px;height:40px; margin-right:16px;">A</div>
+                 <div style="flex:1;">
+                    <div id="chat-name" style="font-weight:600;">Contact Name</div>
+                    <div id="chat-status" style="font-size:12px; color:var(--success);">online</div>
+                 </div>
+                 <select id="chat-status-sel" class="btn-secondary" style="width:auto; padding:4px 12px; font-size:12px;"></select>
+              </div>
+              <div id="chat-messages" style="flex:1; overflow-y:auto; padding:24px; display:flex; flex-direction:column; gap:8px;"></div>
+              <div style="padding:24px; border-top:1px solid var(--border); display:flex; gap:12px; background:var(--surface);">
+                 <textarea id="chat-reply-input" placeholder="Type a message..." rows="1"></textarea>
+                 <button class="btn btn-primary" id="chat-send-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
+              </div>
+           </div>
         </div>
       </div>
     </div>
 
-    <!-- ═══ CONTACTS ═══ -->
+    <!-- CONTACTS -->
     <div class="page" id="page-contacts">
       <div class="page-header">
-        <div><h2>Contacts</h2><div class="subtitle" id="contact-count-label">Loading…</div></div>
-        <div class="header-actions">
-          <button class="btn btn-secondary btn-sm" id="import-csv-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            Import CSV
-          </button>
-          <button class="btn btn-blue btn-sm" id="broadcast-selected-btn" style="display:none;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-            Send Broadcast
-          </button>
-          <button class="btn btn-primary btn-sm" id="add-contact-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Contact
-          </button>
+        <div class="page-title">
+          <h2>Contacts</h2>
+          <p id="contact-count-label">Manage your audience</p>
+        </div>
+        <div style="display:flex; gap:12px;">
+          <button class="btn btn-secondary" id="import-csv-btn">Import CSV</button>
+          <button class="btn btn-primary" id="add-contact-btn">Add Contact</button>
         </div>
       </div>
-      <div class="filter-bar">
-        <div class="search-box">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-          <input type="search" id="contact-search" placeholder="Search name or phone…" style="max-width:240px;" />
-        </div>
-        <select id="contact-tag-filter"><option value="">All tags</option></select>
-        <select id="contact-optin-filter">
-          <option value="">All</option>
-          <option value="true">Opted In</option>
-          <option value="false">Opted Out</option>
-        </select>
-      </div>
-      <div class="page-body" style="padding:0;">
-        <div class="table-wrap table-card">
-          <table>
-            <thead>
-              <tr>
-                <th style="width:40px;"><input type="checkbox" id="contact-select-all" /></th>
-                <th>Name</th>
-                <th>Phone</th>
-                <th>Tags</th>
-                <th>Status</th>
-                <th>Added</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="contacts-tbody"><tr><td colspan="6" class="loading-row"><div class="spinner"></div></td></tr></tbody>
-          </table>
-        </div>
-        <div class="pagination" id="contacts-pagination"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Name</th><th>Phone</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="contact-tbody"></tbody>
+        </table>
       </div>
     </div>
 
-    <!-- ═══ BROADCASTS ═══ -->
+    <!-- BROADCASTS -->
     <div class="page" id="page-broadcasts">
       <div class="page-header">
-        <div><h2>Broadcasts</h2><div class="subtitle">Bulk template campaigns</div></div>
-        <div class="header-actions">
-          <button class="btn btn-primary btn-sm" id="new-broadcast-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            New Broadcast
-          </button>
+        <div class="page-title">
+          <h2>Broadcasts</h2>
+          <p>Campaign performance and history</p>
         </div>
+        <button class="btn btn-primary" id="new-broadcast-btn">New Campaign</button>
       </div>
-      <div class="page-body">
-        <div class="table-wrap table-card">
-          <table>
-            <thead>
-              <tr><th>Name</th><th>Template</th><th>Segment</th><th>Status</th><th>Sent</th><th>Failed</th><th>Created</th><th>Actions</th></tr>
-            </thead>
-            <tbody id="broadcasts-tbody"><tr><td colspan="8" class="loading-row"><div class="spinner"></div></td></tr></tbody>
-          </table>
-        </div>
+      <div id="broadcast-grid" class="stats-grid">
+         <!-- Cards loaded via JS -->
       </div>
     </div>
 
-    <!-- ═══ BOT FLOWS ═══ -->
+    <!-- BOT FLOWS -->
     <div class="page" id="page-bot">
       <div class="page-header">
-        <div><h2>Bot Flows</h2><div class="subtitle">Keyword auto-reply rules</div></div>
-        <div class="header-actions">
-          <button class="btn btn-primary btn-sm" id="new-flow-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            New Flow
-          </button>
+        <div class="page-title">
+          <h2>Bot Flows</h2>
+          <p>Keyword-based automated replies</p>
         </div>
+        <button class="btn btn-primary" id="new-flow-btn">New Flow</button>
       </div>
-      <div class="page-body">
-        <div class="table-wrap table-card">
-          <table>
-            <thead>
-              <tr><th>Keyword</th><th>Type</th><th>Response Preview</th><th>Active</th><th>Actions</th></tr>
-            </thead>
-            <tbody id="bot-flows-tbody"><tr><td colspan="5" class="loading-row"><div class="spinner"></div></td></tr></tbody>
-          </table>
-        </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Keyword</th><th>Type</th><th>Response</th><th>Active</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="bot-flows-tbody"></tbody>
+        </table>
       </div>
     </div>
 
-    <!-- ═══ AGENTS ═══ -->
+    <!-- AGENTS -->
     <div class="page" id="page-agents">
       <div class="page-header">
-        <div><h2>Agents</h2><div class="subtitle">Team members &amp; access</div></div>
-        <div class="header-actions">
-          <button class="btn btn-primary btn-sm" id="new-agent-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Agent
-          </button>
+        <div class="page-title">
+          <h2>Agents</h2>
+          <p>Manage team members and roles</p>
         </div>
+        <button class="btn btn-primary" id="new-agent-btn">Add Agent</button>
       </div>
-      <div class="page-body">
-        <div class="table-wrap table-card">
-          <table>
-            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead>
-            <tbody id="agents-tbody"><tr><td colspan="5" class="loading-row"><div class="spinner"></div></td></tr></tbody>
-          </table>
-        </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="agents-tbody"></tbody>
+        </table>
       </div>
     </div>
 
   </main>
-
-  <!-- ── Bottom Nav (mobile) ── -->
-  <nav class="bottom-nav">
-    <div class="bottom-nav-inner">
-      <button class="bottom-nav-item active" data-page="dashboard">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        Stats
-      </button>
-      <button class="bottom-nav-item" data-page="inbox">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-        Inbox
-      </button>
-      <button class="bottom-nav-item" data-page="contacts">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-        Contacts
-      </button>
-      <button class="bottom-nav-item" data-page="broadcasts">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-        Broadcast
-      </button>
-      <button class="bottom-nav-item" data-page="bot">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M12 11V7M9 7h6M9 3h6v4H9z"/></svg>
-        Bot
-      </button>
-    </div>
-  </nav>
 </div>
 
-<!-- ══ MODALS ════════════════════════════════════════════════════ -->
-
-<!-- Contact Add/Edit Modal -->
-<div class="modal-overlay" id="contact-modal">
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-overlay">
   <div class="modal">
     <div class="modal-header">
-      <h3 id="contact-modal-title">Add Contact</h3>
-      <button class="modal-close btn" data-close="contact-modal">✕</button>
+      <h3 id="modal-title">Title</h3>
+      <button onclick="closeModal()" class="btn btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="modal-body">
-      <input type="hidden" id="contact-id" />
-      <div class="form-row">
-        <div class="form-group"><label>Name</label><input type="text" id="c-name" placeholder="Full name" /></div>
-        <div class="form-group"><label>Phone *</label><input type="tel" id="c-phone" placeholder="919876543210" required /></div>
-      </div>
-      <div class="form-group"><label>Tags</label><input type="text" id="c-tags" placeholder="devotee,newsletter" /><div class="input-hint">Comma-separated tags for segmentation</div></div>
-      <div class="form-group" style="display:flex;align-items:center;gap:12px;">
-        <label style="margin:0;">Opted In</label>
-        <label class="toggle"><input type="checkbox" id="c-opted-in" checked /><span class="toggle-slider"></span></label>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-close="contact-modal">Cancel</button>
-      <button class="btn btn-primary" id="save-contact-btn">Save</button>
-    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
   </div>
 </div>
 
-<!-- CSV Import Modal -->
-<div class="modal-overlay" id="csv-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>Import Contacts from CSV</h3>
-      <button class="modal-close btn" data-close="csv-modal">✕</button>
-    </div>
-    <div class="modal-body">
-      <p class="text-sm text-muted mb-3">Required column: <code>phone</code>. Optional: <code>name</code>, <code>tags</code>, <code>opted_in</code></p>
-      <div class="form-group">
-        <label>CSV File</label>
-        <input type="file" id="csv-file-input" accept=".csv" style="padding:8px;" />
-      </div>
-      <div id="csv-result" style="display:none;" class="mt-2"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-close="csv-modal">Close</button>
-      <button class="btn btn-primary" id="do-csv-import-btn">Import</button>
-    </div>
-  </div>
-</div>
-
-<!-- Broadcast Create Modal -->
-<div class="modal-overlay" id="broadcast-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>New Broadcast</h3>
-      <button class="modal-close btn" data-close="broadcast-modal">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group"><label>Campaign Name *</label><input type="text" id="b-name" placeholder="e.g. Diwali Greetings" /></div>
-      <div class="form-group">
-        <label>Specific Recipients</label>
-        <textarea id="b-recipients" placeholder="919876543210, 919998887776..." rows="2"></textarea>
-        <div class="input-hint">Comma-separated phone numbers (bypasses segment tag if set)</div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Template Name *</label><input type="text" id="b-template" placeholder="hello_world" /><div class="input-hint">Exact name from Meta template manager</div></div>
-        <div class="form-group"><label>Language Code</label><input type="text" id="b-lang" value="en_US" /></div>
-      </div>
-      <div class="form-group"><label>Segment Tag</label><input type="text" id="b-segment" placeholder="devotee (leave blank for all)" /><div class="input-hint">Only contacts with this tag will receive it</div></div>
-      <div class="form-group"><label>Schedule (optional)</label><input type="datetime-local" id="b-schedule" /><div class="input-hint">Leave blank to save as draft and send manually</div></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-close="broadcast-modal">Cancel</button>
-      <button class="btn btn-primary" id="save-broadcast-btn">Create Broadcast</button>
-    </div>
-  </div>
-</div>
-
-<!-- Bot Flow Create/Edit Modal -->
-<div class="modal-overlay" id="flow-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 id="flow-modal-title">New Bot Flow</h3>
-      <button class="modal-close btn" data-close="flow-modal">✕</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="flow-id" />
-      <div class="form-row">
-        <div class="form-group"><label>Trigger Keyword *</label><input type="text" id="f-keyword" placeholder="help" /><div class="input-hint">Exact match, case-insensitive</div></div>
-        <div class="form-group"><label>Response Type *</label>
-          <select id="f-type">
-            <option value="text">Text</option>
-            <option value="buttons">Buttons</option>
-            <option value="list">List</option>
-            <option value="handoff">Handoff (human)</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group" id="f-text-group">
-        <label>Message *</label>
-        <textarea id="f-message" placeholder="Reply message text…"></textarea>
-      </div>
-      <div class="form-group" id="f-buttons-group" style="display:none;">
-        <label>Buttons JSON</label>
-        <textarea id="f-buttons-json" placeholder='[{"id":"1","title":"Option 1"},{"id":"2","title":"Option 2"}]' style="font-family:monospace;font-size:.8rem;"></textarea>
-        <div class="input-hint">Array of {id, title} — max 3 buttons</div>
-      </div>
-      <div class="form-group" id="f-sections-group" style="display:none;">
-        <label>Sections JSON</label>
-        <textarea id="f-sections-json" placeholder='[{"title":"Section","rows":[{"id":"a","title":"Item","description":""}]}]' style="font-family:monospace;font-size:.8rem;"></textarea>
-        <div class="input-hint">Array of {title, rows: [{id, title, description}]}</div>
-      </div>
-      <div class="form-group" style="display:flex;align-items:center;gap:12px;">
-        <label style="margin:0;">Active</label>
-        <label class="toggle"><input type="checkbox" id="f-active" checked /><span class="toggle-slider"></span></label>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-close="flow-modal">Cancel</button>
-      <button class="btn btn-primary" id="save-flow-btn">Save Flow</button>
-    </div>
-  </div>
-</div>
-
-<!-- Agent Create/Edit Modal -->
-<div class="modal-overlay" id="agent-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 id="agent-modal-title">Add Agent</h3>
-      <button class="modal-close btn" data-close="agent-modal">✕</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="a-id" />
-      <div class="form-row">
-        <div class="form-group"><label>Name *</label><input type="text" id="a-name" /></div>
-        <div class="form-group"><label>Email *</label><input type="email" id="a-email" /></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label id="a-pwd-label">Password *</label><input type="password" id="a-password" placeholder="Min 8 characters" /></div>
-        <div class="form-group"><label>Role</label>
-          <select id="a-role"><option value="agent">Agent</option><option value="admin">Admin</option></select>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-close="agent-modal">Cancel</button>
-      <button class="btn btn-primary" id="save-agent-btn">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- Toast container -->
-<div id="toast-container"></div>
-
-<!-- Scripts (loaded in order; vanilla, no build step) -->
 <script src="/js/api.js"></script>
 <script src="/js/ui.js"></script>
-<script src="/js/contacts.js"></script>
+<script src="/js/dashboard.js"></script>
 <script src="/js/inbox.js"></script>
+<script src="/js/contacts.js"></script>
 <script src="/js/broadcasts.js"></script>
 <script src="/js/bot.js"></script>
 <script src="/js/agents.js"></script>
-<script src="/js/dashboard.js"></script>
 <script src="/js/app.js"></script>
+
 </body>
 </html>

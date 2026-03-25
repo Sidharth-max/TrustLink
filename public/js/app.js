@@ -1,15 +1,12 @@
 /**
  * public/js/app.js
- * Application bootstrap: handles login/logout, session check, page routing.
- * This script runs last (loaded after all page modules).
+ * Application bootstrap: handles auth, routing, and shared UI (sidebar, theme).
  */
 
 (() => {
-  // Current active page key
   let currentPage = 'dashboard';
   let currentUser = null;
 
-  // Map of page keys → page module init functions
   const pageModules = {
     dashboard: DashboardPage,
     inbox:     InboxPage,
@@ -20,7 +17,6 @@
   };
   const initialized = {};
 
-  // ── Auth ──────────────────────────────────────────────────────────
   async function checkAuth() {
     try {
       const { agent } = await API.me();
@@ -32,35 +28,38 @@
   }
 
   function showLogin() {
-    document.getElementById('login-page').style.display = 'grid';
+    document.getElementById('login-page').style.display = 'block';
     document.getElementById('app').classList.remove('ready');
   }
 
   function showApp(agent) {
     document.getElementById('login-page').style.display = 'none';
-    document.getElementById('app').classList.add('ready');
+    const app = document.getElementById('app');
+    app.classList.add('ready');
+    app.style.display = 'flex';
 
-    // Populate sidebar identity
+    // Sidebar Identity
     document.getElementById('sidebar-name').textContent   = agent.name;
     document.getElementById('sidebar-role').textContent   = agent.role;
     document.getElementById('sidebar-avatar').textContent = initials(agent.name);
 
-    // Hide agents nav for non-admins
     if (agent.role !== 'admin') {
-      document.getElementById('agents-nav-item').style.display = 'none';
+      const nav = document.getElementById('agents-nav-item');
+      if (nav) nav.style.display = 'none';
     }
 
     navigateTo(currentPage);
   }
 
-  // ── Login form ────────────────────────────────────────────────────
+  // ── Login ─────────────────────────────────────────────────────────
   document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email    = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
     const btn      = document.getElementById('login-btn');
     const errEl    = document.getElementById('login-error');
-    errEl.classList.remove('show');
+    
+    errEl.style.display = 'none';
     btn.disabled = true; btn.textContent = 'Signing in…';
 
     try {
@@ -69,55 +68,66 @@
       showApp(agent);
     } catch (err) {
       errEl.textContent = err.message || 'Invalid credentials';
-      errEl.classList.add('show');
+      errEl.style.display = 'flex';
     } finally {
       btn.disabled = false; btn.textContent = 'Sign In';
     }
   });
 
-  // ── Logout ────────────────────────────────────────────────────────
-  document.getElementById('logout-btn').addEventListener('click', async (e) => {
-    e.stopPropagation();
+  document.getElementById('logout-btn').addEventListener('click', async () => {
     await API.logout().catch(() => {});
-    currentUser = null;
     showLogin();
   });
 
   // ── Navigation ────────────────────────────────────────────────────
   function navigateTo(page) {
-    // Validate page exists
     if (!document.getElementById(`page-${page}`)) page = 'dashboard';
     currentPage = page;
 
     // Show/hide pages
-    document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(`page-${page}`).classList.add('active');
 
-    // Highlight nav items (sidebar + bottom nav)
-    document.querySelectorAll('.nav-item, .bottom-nav-item').forEach(el => {
-      el.classList.toggle('active', el.dataset.page === page);
+    // Sidebar & Bottom Nav Active State
+    document.querySelectorAll('.nav-item').forEach(n => {
+      n.classList.toggle('active', n.dataset.page === page);
+    });
+    document.querySelectorAll('.bottom-nav-item').forEach(n => {
+      n.classList.toggle('active', n.dataset.page === page);
     });
 
-    // Init the page module once
+    // Close sidebar on mobile
+    document.getElementById('sidebar').classList.remove('open');
+
+    // Init page module
     if (pageModules[page] && !initialized[page]) {
       pageModules[page].init();
       initialized[page] = true;
+    } else if (pageModules[page]) {
+      pageModules[page].load?.();
     }
   }
 
-  // Wire nav items (sidebar)
-  document.querySelectorAll('.nav-item[data-page]').forEach(el => {
-    el.addEventListener('click', () => navigateTo(el.dataset.page));
-  });
-  // Wire bottom nav items (mobile)
-  document.querySelectorAll('.bottom-nav-item[data-page]').forEach(el => {
-    el.addEventListener('click', () => navigateTo(el.dataset.page));
+  document.querySelectorAll('.nav-item[data-page], .bottom-nav-item[data-page]').forEach(el => {
+    el.onclick = (e) => {
+      e.preventDefault();
+      navigateTo(el.dataset.page);
+    };
   });
 
-  // ── Theme Toggle ──────────────────────────────────────────────────
+  // ── Sidebar Toggle ────────────────────────────────────────────────
+  function initSidebar() {
+    // We'll add a mobile toggle button in a header if needed, 
+    // but for now the sidebar is fixed on PC and hidden on mobile via CSS.
+  }
+
+  // ── Theme ─────────────────────────────────────────────────────────
   function initTheme() {
-    const saved = localStorage.getItem('theme') || 'dark';
-    if (saved === 'light') document.documentElement.classList.add('light');
+    let saved = localStorage.getItem('theme');
+    if (!saved) {
+      saved = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    }
+    document.documentElement.className = saved;
     updateThemeIcons();
   }
   function updateThemeIcons() {
@@ -125,17 +135,17 @@
     document.getElementById('sun-icon').style.display  = isLight ? 'none' : 'block';
     document.getElementById('moon-icon').style.display = isLight ? 'block' : 'none';
   }
-  document.getElementById('theme-toggle').addEventListener('click', () => {
-    document.documentElement.classList.toggle('light');
-    const isLight = document.documentElement.classList.contains('light');
+  document.getElementById('theme-toggle').onclick = () => {
+    const isLight = document.documentElement.classList.toggle('light');
+    document.documentElement.classList.toggle('dark', !isLight);
     localStorage.setItem('theme', isLight ? 'light' : 'dark');
     updateThemeIcons();
-  });
+  };
 
-  // ── Boot ──────────────────────────────────────────────────────────
-  checkAuth();
+  // ── Init ──────────────────────────────────────────────────────────
   initTheme();
+  checkAuth();
+  initSidebar();
 
-  // Expose public API
   window.app = { showPage: navigateTo };
 })();
