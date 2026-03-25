@@ -52,7 +52,7 @@ const DashboardPage = (() => {
         tbody.innerHTML = broadcasts.broadcasts.slice(0, 10).map(b => `
           <tr>
             <td data-label="Name">${esc(b.name)}</td>
-            <td data-label="Template"><code style="font-size:.78rem">${esc(b.template_name)}</code></td>
+            <td data-label="Type"><span class="badge">${esc(b.type)}</span></td>
             <td data-label="Sent">${b.sent_count || 0}</td>
             <td data-label="Failed">${b.failed_count || 0}</td>
             <td data-label="Success">${b.success_rate || 0}%</td>
@@ -83,17 +83,17 @@ const DashboardPage = (() => {
 
     if (chartInstance) { chartInstance.destroy(); }
 
-    const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const gridColor = dark ? '#2a3942' : '#e4e6ea';
-    const textColor = dark ? '#8696a0' : '#54656f';
+    const dark = document.documentElement.classList.contains('light') ? false : true;
+    const gridColor = dark ? '#222222' : '#e5e5e5';
+    const textColor = dark ? '#888888' : '#666666';
 
     chartInstance = new Chart(ctx, {
       type: 'bar',
       data: {
         labels,
         datasets: [
-          { label: 'Sent', data: outbound, backgroundColor: '#25D36688', borderRadius: 4 },
-          { label: 'Received', data: inbound, backgroundColor: '#1d72b888', borderRadius: 4 },
+          { label: 'Sent', data: outbound, backgroundColor: '#ffffff', borderRadius: 4 },
+          { label: 'Received', data: inbound, backgroundColor: '#333333', borderRadius: 4 },
         ],
       },
       options: {

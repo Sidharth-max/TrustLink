@@ -58,8 +58,8 @@ const ContactsPage = (() => {
           <td><input type="checkbox" class="contact-select" value="${esc(c.phone)}" /></td>
           <td data-label="Name">${esc(c.name || '—')}</td>
           <td data-label="Phone"><code style="font-size:.8rem">${esc(c.phone)}</code></td>
-          <td data-label="Tags">${c.tags ? c.tags.split(',').map(t => t.trim()).filter(Boolean).map(t => `<span class="badge badge-gray" style="margin:1px">${esc(t)}</span>`).join('') : '—'}</td>
-          <td data-label="Status">${c.opted_in ? '<span class="badge badge-green">Opted In</span>' : '<span class="badge badge-red">Opted Out</span>'}</td>
+          <td data-label="Tags">${c.tags ? c.tags.split(',').map(t => t.trim()).filter(Boolean).map(t => `<span class="badge" style="margin:1px">${esc(t)}</span>`).join('') : '—'}</td>
+          <td data-label="Status">${c.opted_in ? '<span class="badge badge-active">Opted In</span>' : '<span class="badge badge-inactive">Opted Out</span>'}</td>
           <td data-label="Added">${fmtDate(c.created_at)}</td>
           <td data-label="Actions">
             <div style="display:flex;gap:6px;">

@@ -61,21 +61,27 @@ function relativeTime(iso) {
 /* ── Badge HTML ──────────────────────────────────────────────────── */
 function statusBadge(status) {
   const map = {
-    open:      ['badge-green', 'Open'],
-    pending:   ['badge-amber', 'Pending'],
-    resolved:  ['badge-gray', 'Resolved'],
-    sent:      ['badge-blue', 'Sent'],
-    delivered: ['badge-green', 'Delivered'],
-    read:      ['badge-green', 'Read'],
-    failed:    ['badge-red', 'Failed'],
-    scheduled: ['badge-blue', 'Scheduled'],
-    running:   ['badge-amber', 'Running'],
-    completed: ['badge-green', 'Completed'],
-    draft:     ['badge-gray', 'Draft'],
-    admin:     ['badge-purple', 'Admin'],
-    agent:     ['badge-blue', 'Agent'],
+    // Active / Success (White bg, Black text)
+    open:      ['badge-active', 'Open'],
+    sent:      ['badge-active', 'Sent'],
+    delivered: ['badge-active', 'Delivered'],
+    read:      ['badge-active', 'Read'],
+    completed: ['badge-active', 'Completed'],
+    admin:     ['badge-active', 'Admin'],
+    agent:     ['badge-active', 'Agent'],
+
+    // Inactive / Error (Transparent, White border)
+    pending:   ['badge-inactive', 'Pending'],
+    resolved:  ['badge-inactive', 'Resolved'],
+    failed:    ['badge-inactive', 'Failed'],
+    draft:     ['badge-inactive', 'Draft'],
+    out:       ['badge-inactive', 'Opted Out'],
+
+    // Warning / Intermediate (Dark gray bg)
+    running:   ['badge-warning', 'Running'],
+    scheduled: ['badge-warning', 'Scheduled'],
   };
-  const [cls, label] = map[status] || ['badge-gray', status];
+  const [cls, label] = map[status] || ['badge', status];
   return `<span class="badge ${cls}">${label}</span>`;
 }
 

@@ -16,7 +16,7 @@ const BotPage = (() => {
         const preview = previewContent(f.response_type, f.response_content);
         return `<tr>
           <td data-label="Keyword"><code>${esc(f.trigger_keyword)}</code></td>
-          <td data-label="Type"><span class="badge badge-blue">${esc(f.response_type)}</span></td>
+          <td data-label="Type"><span class="badge">${esc(f.response_type)}</span></td>
           <td data-label="Response" style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(preview)}">${esc(preview)}</td>
           <td data-label="Active">
             <label class="toggle"><input type="checkbox" ${f.active ? 'checked' : ''} onchange="BotPage.toggle(${f.id})"><span class="toggle-slider"></span></label>

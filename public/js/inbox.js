@@ -41,14 +41,15 @@ const InboxPage = (() => {
                data-id="${c.id}" onclick="InboxPage.openConv(${c.id})">
             <div class="conv-avatar">${ini}</div>
             <div class="conv-meta">
-                <div style="display:flex;align-items:center;gap:6px;">
-                  <div class="conv-name">${esc(name)}</div>
-                  ${c.bot_active ? '<span class="bot-badge active">Bot</span>' : '<span class="bot-badge">Human</span>'}
-                </div>
-                <div class="conv-preview">${preview}</div>
-              </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="conv-name">
+              ${esc(name)}
+              <span class="bot-badge ${c.bot_active ? 'active' : ''}">${c.bot_active ? 'Bot' : 'Human'}</span>
+            </div>
+            <div class="conv-time">${ago}</div>
+          </div>
+              <div class="conv-preview">${preview}</div>
               <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                <div class="conv-time">${ago}</div>
                 ${c.unread_count > 0 ? `<div class="conv-unread">${c.unread_count}</div>` : ''}
               </div>
             </div>`;

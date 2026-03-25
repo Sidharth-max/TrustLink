@@ -114,8 +114,27 @@
     el.addEventListener('click', () => navigateTo(el.dataset.page));
   });
 
+  // ── Theme Toggle ──────────────────────────────────────────────────
+  function initTheme() {
+    const saved = localStorage.getItem('theme') || 'dark';
+    if (saved === 'light') document.documentElement.classList.add('light');
+    updateThemeIcons();
+  }
+  function updateThemeIcons() {
+    const isLight = document.documentElement.classList.contains('light');
+    document.getElementById('sun-icon').style.display  = isLight ? 'none' : 'block';
+    document.getElementById('moon-icon').style.display = isLight ? 'block' : 'none';
+  }
+  document.getElementById('theme-toggle').addEventListener('click', () => {
+    document.documentElement.classList.toggle('light');
+    const isLight = document.documentElement.classList.contains('light');
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    updateThemeIcons();
+  });
+
   // ── Boot ──────────────────────────────────────────────────────────
   checkAuth();
+  initTheme();
 
   // Expose public API
   window.app = { showPage: navigateTo };

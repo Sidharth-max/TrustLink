@@ -16,10 +16,10 @@ const BroadcastsPage = (() => {
         <tr>
           <td data-label="Name"><strong>${esc(b.name)}</strong></td>
           <td data-label="Template"><code style="font-size:.78rem">${esc(b.template_name)}</code></td>
-          <td data-label="Segment">${b.segment_tag ? `<span class="badge badge-blue">${esc(b.segment_tag)}</span>` : '<span class="text-muted">All</span>'}</td>
+          <td data-label="Segment">${b.segment_tag ? `<span class="badge">${esc(b.segment_tag)}</span>` : '<span class="text-muted">All</span>'}</td>
           <td data-label="Status">${statusBadge(b.status)}</td>
           <td data-label="Sent">${b.sent_count ?? 0}</td>
-          <td data-label="Failed">${b.failed_count ? `<span style="color:var(--red)">${b.failed_count}</span>` : '0'}</td>
+          <td data-label="Failed">${b.failed_count || '0'}</td>
           <td data-label="Created">${fmtDate(b.created_at)}</td>
           <td data-label="Actions">
             <div style="display:flex;gap:6px;">
